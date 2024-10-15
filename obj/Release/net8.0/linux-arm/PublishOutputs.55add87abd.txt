@@ -1,0 +1,4 @@
+C:\Users\Veshsh\source\repos\OpenApiArtonit\OpenAPIArtonit\obj\Release\net8.0\linux-arm\PubTmp\Out\appsettings.Development.json
+C:\Users\Veshsh\source\repos\OpenApiArtonit\OpenAPIArtonit\obj\Release\net8.0\linux-arm\PubTmp\Out\appsettings.json
+C:\Users\Veshsh\source\repos\OpenApiArtonit\OpenAPIArtonit\obj\Release\net8.0\linux-arm\PubTmp\Out\OpenAPIArtonit.pdb
+C:\Users\Veshsh\source\repos\OpenApiArtonit\OpenAPIArtonit\obj\Release\net8.0\linux-arm\PubTmp\Out\OpenAPIArtonit
