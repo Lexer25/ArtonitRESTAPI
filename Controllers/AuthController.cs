@@ -13,12 +13,12 @@ namespace OpenAPIArtonit.Controllers
         {
             if (username == "ADMIN" || pasword == "333")
             {
-                var token = CreateJwtToken();
+                var token = AuthController.CreateJwtToken();
                 return Ok(new { Status = true, Message = "success", Data = new {Token =token} });
             }
             return BadRequest();
         }
-        private string CreateJwtToken() {
+        private static string CreateJwtToken() {
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),

@@ -21,6 +21,80 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "OpenAPIArtonit.APIControllers.PersonController",
+    "Method": "Get",
+    "RelativePath": "Person",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OpenAPIArtonit.APIControllers.PersonController",
+    "Method": "Add",
+    "RelativePath": "Person",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "body",
+        "Type": "OpenAPIArtonit.Model.PersonPostSee",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OpenAPIArtonit.APIControllers.PersonController",
+    "Method": "Update",
+    "RelativePath": "Person",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "body",
+        "Type": "OpenAPIArtonit.Model.PersonPach",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OpenAPIArtonit.APIControllers.PersonController",
+    "Method": "Delite",
+    "RelativePath": "Person",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OpenAPIArtonit.APIControllers.PersonController",
+    "Method": "GetList",
+    "RelativePath": "Person/GetList",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "OpenAPIArtonit.Controllers.WeatherForecastController",
     "Method": "Get",
     "RelativePath": "WeatherForecast",
@@ -30,7 +104,7 @@
     "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[OpenAPIArtonit.WeatherForecast, OpenAPIArtonit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[ArtonitRESTAPI.WeatherForecast, ArtonitRESTAPI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",

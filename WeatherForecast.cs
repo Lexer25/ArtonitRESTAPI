@@ -1,4 +1,4 @@
-namespace OpenAPIArtonit
+namespace ArtonitRESTAPI
 {
     public class WeatherForecast
     {
