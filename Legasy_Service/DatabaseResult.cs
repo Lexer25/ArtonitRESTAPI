@@ -11,6 +11,7 @@
     public enum State
     {
         Successes,
-        Error
+        Error,
+        NotFound
     }
 }

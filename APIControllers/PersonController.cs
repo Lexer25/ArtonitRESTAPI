@@ -2,8 +2,6 @@
 using OpenAPIArtonit.DBControllers;
 using OpenAPIArtonit.Legasy_Service;
 using OpenAPIArtonit.Model;
-using System.Net;
-using System.Runtime.Intrinsics.Arm;
 
 namespace OpenAPIArtonit.APIControllers
 {
@@ -16,12 +14,18 @@ namespace OpenAPIArtonit.APIControllers
         {
             var result = PersonDBController.GetById(id);
             Console.WriteLine(result.State);
-            var people = new Dictionary<State, IActionResult>()
+            if (result.State == State.Successes)
             {
-                { State.Successes, Ok(new { result.Value })},
-                { State.Error, BadRequest() },
-            };
-            return people[result.State];
+                return Ok(new { result.Value });
+            }
+            else if (result.State == State.NotFound)
+            {
+                return NotFound(result.ErrorMessage);
+            }
+            else
+            {
+                return BadRequest(result.ErrorMessage);
+            }
         }
         [HttpGet(nameof(GetList))]
         public IActionResult GetList()

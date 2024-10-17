@@ -159,7 +159,7 @@ namespace OpenAPIArtonit.DB
                         }
                         return new DatabaseResult()
                         {
-                            State = State.Error,
+                            State = State.NotFound,
                             ErrorMessage = "Запрос в базу данных не дал результата"
                         };
                     }
