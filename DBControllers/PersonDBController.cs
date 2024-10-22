@@ -16,7 +16,7 @@ namespace OpenAPIArtonit.DBControllers
                 DATEBIRTH, PLACELIFE, PLACEREG, PHONEHOME, PHONECELLULAR, PHONEWORK,
                 NUMDOC, DATEDOC, PLACEDOC, PHOTO, WORKSTART, WORKEND, ""ACTIVE"" , p.FLAG,
                 LOGIN, PSWD, PEPTYPE, POST, PLACEBIRTH, NOTE, ID_AREA, TABNUM
-                from people p
+                from people p 
                 join organization_getchild (1, (select p2. id_orgctrl from people p2 where p2.id_pep={1})) og on p.id_org=og.id_org
                 where p.ID_PEP = {id}";
             return DatabaseService.Get<PersonGet>(query);
@@ -42,7 +42,7 @@ namespace OpenAPIArtonit.DBControllers
             var idOrgCtrl = userIdentity?.FindFirst(MyClaimTypes.IdOrgCtrl)?.Value;
 
             var rdbDatabase = DatabaseService.Get<RDBDatabase>("select GEN_ID (gen_people_id, 1) from RDB$DATABASE");
-
+            if (rdbDatabase.State != State.Successes) return rdbDatabase;
             peopleAdd.id_org = 1;
             peopleAdd.id_db = 1;
             peopleAdd.Id = ((RDBDatabase)rdbDatabase.Value).Id;

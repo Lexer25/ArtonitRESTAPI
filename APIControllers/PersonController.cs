@@ -13,19 +13,14 @@ namespace OpenAPIArtonit.APIControllers
         public IActionResult Get(int id)
         {
             var result = PersonDBController.GetById(id);
-            Console.WriteLine(result.State);
-            if (result.State == State.Successes)
+            var people = new Dictionary<State, IActionResult>()
             {
-                return Ok(new { result.Value });
-            }
-            else if (result.State == State.NotFound)
-            {
-                return NotFound(result.ErrorMessage);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+                { State.Successes, Ok( result.Value )},
+                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
+                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
+                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
+            };
+            return people[result.State];
         }
         [HttpGet(nameof(GetList))]
         public IActionResult GetList()
@@ -35,7 +30,9 @@ namespace OpenAPIArtonit.APIControllers
             var people = new Dictionary<State, IActionResult>()
             {
                 { State.Successes, Ok(new { result.Value })},
-                { State.Error, BadRequest() },
+                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
+                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
+                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
             };
             return people[result.State];
         }
@@ -46,7 +43,9 @@ namespace OpenAPIArtonit.APIControllers
             var people = new Dictionary<State, IActionResult>()
             {
                 { State.Successes, Ok(new { result.Value })},
-                { State.Error, BadRequest() },
+                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
+                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
+                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
             };
             return people[result.State];
         }
@@ -57,7 +56,9 @@ namespace OpenAPIArtonit.APIControllers
             var people = new Dictionary<State, IActionResult>()
             {
                 { State.Successes, Ok(new { result.Value })},
-                { State.Error, BadRequest() },
+                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
+                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
+                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
             };
             return people[result.State];
         }
@@ -67,8 +68,10 @@ namespace OpenAPIArtonit.APIControllers
             var result = PersonDBController.Delete(id);
             var people = new Dictionary<State, IActionResult>()
             {
-                { State.Successes, Ok(new { id })},
-                { State.Error, BadRequest() },
+                { State.Successes, Ok(new { result.Value })},
+                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
+                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
+                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
             };
             return people[result.State];
         }

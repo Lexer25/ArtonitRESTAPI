@@ -6,12 +6,14 @@
 
         public object Value { get; set; }
 
-        public string ErrorMessage { get; set; }
+        public string ErrorMessage { get; set; }       
+
     }
     public enum State
     {
-        Successes,
-        Error,
-        NotFound
+        Successes,//200
+        BadSQLRequest,//400
+        NullSQLRequest,//404
+        NullDataBase,//500
     }
 }

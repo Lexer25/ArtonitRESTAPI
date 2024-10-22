@@ -66,7 +66,7 @@ namespace OpenAPIArtonit.DB
                                     return new DatabaseResult()
                                     {
                                         ErrorMessage = ex.Message,
-                                        State = State.Error,
+                                        State = State.NullSQLRequest,
                                     };
                                 }
                             }
@@ -74,20 +74,20 @@ namespace OpenAPIArtonit.DB
                             rows.Add(instance);
                         }
                     }
-
                     return new DatabaseResult()
                     {
-                        State = State.Successes,
+                        State = State.BadSQLRequest,
                         Value = rows
                     };
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine("ex2");
                     LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
                     return new DatabaseResult()
                     {
                         ErrorMessage = ex.Message,
-                        State = State.Error,
+                        State = State.BadSQLRequest,
                     };
                 }
             }
@@ -107,64 +107,75 @@ namespace OpenAPIArtonit.DB
                 try
                 {
                     connection.Open();
-                    var cmd = new FbCommand(query, connection);
-                    using (var dr = cmd.ExecuteReader())
+                    try
                     {
-                        while (dr.Read())
+                        var cmd = new FbCommand(query, connection);
+                        using (var dr = cmd.ExecuteReader())
                         {
-                            var instance = (T)Activator.CreateInstance(typeof(T));
-
-                            var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Static |
-                                BindingFlags.NonPublic | BindingFlags.Public); //СВОЙСТВА МОДЕЛИ
-
-                            foreach (var property in properties)
+                            while (dr.Read())
                             {
-                                var databaseNameAttribute = (DatabaseNameAttribute)
-                                    Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
+                                var instance = (T)Activator.CreateInstance(typeof(T));
 
-                                if (databaseNameAttribute == null) continue;
+                                var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Static |
+                                    BindingFlags.NonPublic | BindingFlags.Public); //СВОЙСТВА МОДЕЛИ
 
-                                try
+                                foreach (var property in properties)
                                 {
-                                    var dbValue = dr[databaseNameAttribute.Value.ToUpper()];
-                                    var underlyingType = Nullable.GetUnderlyingType(property.PropertyType);
-                                    bool isNullable = underlyingType != null;
+                                    var databaseNameAttribute = (DatabaseNameAttribute)
+                                        Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
 
-                                    if (isNullable && dbValue == DBNull.Value)
+                                    if (databaseNameAttribute == null) continue;
+
+                                    try
                                     {
-                                        property.SetValue(instance, null); // Установка значения null для nullable типа
+                                        var dbValue = dr[databaseNameAttribute.Value.ToUpper()];
+                                        var underlyingType = Nullable.GetUnderlyingType(property.PropertyType);
+                                        bool isNullable = underlyingType != null;
+
+                                        if (isNullable && dbValue == DBNull.Value)
+                                        {
+                                            property.SetValue(instance, null); // Установка значения null для nullable типа
+                                        }
+                                        else
+                                        {
+                                            var convertedValue = Convert.ChangeType(dbValue, underlyingType ?? property.PropertyType);
+                                            property.SetValue(instance, convertedValue);
+                                        }
                                     }
-                                    else
+                                    catch (Exception ex)
                                     {
-                                        var convertedValue = Convert.ChangeType(dbValue, underlyingType ?? property.PropertyType);
-                                        property.SetValue(instance, convertedValue);
+                                        LoggerService.Log<DatabaseService>("Exception", ex.Message);
+                                        return new DatabaseResult()
+                                        {
+                                            ErrorMessage = ex.Message,
+                                            State = State.BadSQLRequest,
+                                        };
                                     }
                                 }
-                                catch (Exception ex)
+
+                                return new DatabaseResult()
                                 {
-                                    LoggerService.Log<DatabaseService>("Exception", ex.Message);
-                                    return new DatabaseResult()
-                                    {
-                                        ErrorMessage = ex.Message,
-                                        State = State.Error,
-                                    };
-                                }
+                                    State = State.Successes,
+                                    Value = instance
+                                };
                             }
-
                             return new DatabaseResult()
                             {
-                                State = State.Successes,
-                                Value = instance
+                                State = State.NullSQLRequest,
+                                ErrorMessage = "Запрос в базу данных не дал результата"
                             };
                         }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
                         return new DatabaseResult()
                         {
-                            State = State.NotFound,
-                            ErrorMessage = "Запрос в базу данных не дал результата"
+                            ErrorMessage = ex.Message,
+                            State = State.BadSQLRequest,
                         };
                     }
-
-
                 }
                 catch (Exception ex)
                 {
@@ -172,7 +183,7 @@ namespace OpenAPIArtonit.DB
                     return new DatabaseResult()
                     {
                         ErrorMessage = ex.Message,
-                        State = State.Error,
+                        State = State.NullDataBase,
                     };
                 }
             }
@@ -182,33 +193,51 @@ namespace OpenAPIArtonit.DB
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             LoggerService.Log<DatabaseService>("Info", query);
-
-            var connectionString = SettingsService.DatabaseConnectionString;
-
-            using (var connection = new FbConnection(connectionString))
+            try
             {
-                try
+                Console.WriteLine(query);
+                var connectionString = SettingsService.DatabaseConnectionString;
+
+                using (var connection = new FbConnection(connectionString))
                 {
                     connection.Open();
                     Console.WriteLine(query);
-                    var cmd = new FbCommand(query, connection);
-                    var result = cmd.ExecuteNonQuery();
-                    Console.WriteLine(result);
-                    return new DatabaseResult()
+                    try
                     {
-                        Value = result,
-                        State = State.Successes
-                    };
+                        var cmd = new FbCommand(query, connection);
+                        var result = cmd.ExecuteNonQuery();
+                        Console.WriteLine(result);
+                        if(result == 0)
+                            return new DatabaseResult()
+                            {
+                                State = State.NullSQLRequest,
+                            };
+                        return new DatabaseResult()
+                        {
+                            Value = result,
+                            State = State.Successes
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
+                        return new DatabaseResult()
+                        {
+                            State = State.BadSQLRequest,
+                            ErrorMessage = ex.Message
+                        };
+                    }
+
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
+                return new DatabaseResult()
                 {
-                    LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
-                    return new DatabaseResult()
-                    {
-                        State = State.Error,
-                        ErrorMessage = ex.Message
-                    };
-                }
+                    State = State.NullDataBase,
+                    ErrorMessage = ex.Message
+                };
             }
         }
 
