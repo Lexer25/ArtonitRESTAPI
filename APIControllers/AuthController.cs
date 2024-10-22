@@ -4,7 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace OpenAPIArtonit.Controllers
+namespace ArtonitRESTAPI.APIControllers
 {
     public class AuthController : ControllerBase
     {
@@ -13,12 +13,13 @@ namespace OpenAPIArtonit.Controllers
         {
             if (username == "ADMIN" || pasword == "333")
             {
-                var token = AuthController.CreateJwtToken();
-                return Ok(new { Status = true, Message = "success", Data = new {Token =token} });
+                var token = CreateJwtToken();
+                return Ok(new { Status = true, Message = "success", Data = new { Token = token } });
             }
             return BadRequest();
         }
-        private static string CreateJwtToken() {
+        private static string CreateJwtToken()
+        {
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),

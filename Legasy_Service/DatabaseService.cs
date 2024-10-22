@@ -1,4 +1,5 @@
-﻿using FirebirdSql.Data.FirebirdClient;
+﻿using ArtonitRESTAPI.Legasy_Service;
+using FirebirdSql.Data.FirebirdClient;
 using OpenAPIArtonit.Anotation;
 using OpenAPIArtonit.Legasy_Service;
 using System.Globalization;
@@ -76,7 +77,7 @@ namespace OpenAPIArtonit.DB
                     }
                     return new DatabaseResult()
                     {
-                        State = State.BadSQLRequest,
+                        State = State.Successes,
                         Value = rows
                     };
                 }

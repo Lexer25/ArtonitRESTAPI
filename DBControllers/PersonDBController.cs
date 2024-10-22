@@ -1,4 +1,5 @@
-﻿using OpenAPIArtonit.DB;
+﻿using ArtonitRESTAPI.Legasy_Service;
+using OpenAPIArtonit.DB;
 using OpenAPIArtonit.Legasy_Service;
 using OpenAPIArtonit.Model;
 using System.Security.Claims;
@@ -21,18 +22,20 @@ namespace OpenAPIArtonit.DBControllers
                 where p.ID_PEP = {id}";
             return DatabaseService.Get<PersonGet>(query);
         }
-        public static DatabaseResult GetAll()
+        public static DatabaseResult GetAll(int pageIndex, int pageSize)
         {
             var userIdentity = ClaimsPrincipal.Current;
             var idPep = userIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var query = $@"select ID_PEP, ID_DB, ID_ORG, SURNAME, NAME, PATRONYMIC,
+            var query = $@"select first {pageSize} skip {pageSize*pageIndex}
+                ID_PEP, ID_DB, ID_ORG, SURNAME, NAME, PATRONYMIC,
                 DATEBIRTH, PLACELIFE, PLACEREG, PHONEHOME, PHONECELLULAR, PHONEWORK,
                 NUMDOC, DATEDOC, PLACEDOC, PHOTO, WORKSTART, WORKEND, ""ACTIVE"" , FLAG,
                 LOGIN, PSWD, PEPTYPE, POST, PLACEBIRTH, NOTE, ID_AREA, TABNUM
                 from people p
                 where p.id_org in (select id_org from 
-                organization_getchild (1, (select p2.id_orgctrl from people p2 where p2.id_pep={1})))";
+                organization_getchild (1, (select p2.id_orgctrl from people p2 where p2.id_pep={1})))
+                ";
 
             return DatabaseService.GetList<PersonGet>(query);
         }

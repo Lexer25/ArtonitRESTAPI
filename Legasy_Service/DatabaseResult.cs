@@ -1,4 +1,7 @@
-﻿namespace OpenAPIArtonit.Legasy_Service
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+
+namespace ArtonitRESTAPI.Legasy_Service
 {
     public class DatabaseResult
     {
@@ -6,7 +9,7 @@
 
         public object Value { get; set; }
 
-        public string ErrorMessage { get; set; }       
+        public string ErrorMessage { get; set; }
 
     }
     public enum State
@@ -16,4 +19,5 @@
         NullSQLRequest,//404
         NullDataBase,//500
     }
+
 }

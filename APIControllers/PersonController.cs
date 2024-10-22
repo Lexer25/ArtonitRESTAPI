@@ -1,79 +1,45 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ArtonitRESTAPI.APIControllers;
+using ArtonitRESTAPI.Legasy_Service;
+using Microsoft.AspNetCore.Mvc;
 using OpenAPIArtonit.DBControllers;
-using OpenAPIArtonit.Legasy_Service;
 using OpenAPIArtonit.Model;
 
 namespace OpenAPIArtonit.APIControllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class PersonController : ControllerBase
+    public class PersonController : BaseAPIController
     {
         [HttpGet]
         public IActionResult Get(int id)
         {
-            var result = PersonDBController.GetById(id);
-            var people = new Dictionary<State, IActionResult>()
-            {
-                { State.Successes, Ok( result.Value )},
-                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
-                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
-                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
-            };
-            return people[result.State];
+            return Request(PersonDBController.GetById(id));
         }
         [HttpGet(nameof(GetList))]
-        public IActionResult GetList()
+        public IActionResult GetList(int pageIndex = 1, int pageSize = 10)
         {
-            var result = PersonDBController.GetAll();
-            Console.WriteLine(result.State);
-            var people = new Dictionary<State, IActionResult>()
+            Console.WriteLine(new Uri(HttpContext.Request.Host.Value + HttpContext.Request.Path));
+            var allpersons = PersonDBController.GetAll(pageIndex, pageSize);
+            if (allpersons.State == State.Successes)
             {
-                { State.Successes, Ok(new { result.Value })},
-                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
-                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
-                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
-            };
-            return people[result.State];
+                allpersons.Value = new Pagination(allpersons.Value, pageIndex, pageSize);
+            }
+            return Request(allpersons);
         }
         [HttpPost]
         public IActionResult Add([FromBody] PersonPostSee body)
         {
-            var result = PersonDBController.Add(new PersonPost(body));
-            var people = new Dictionary<State, IActionResult>()
-            {
-                { State.Successes, Ok(new { result.Value })},
-                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
-                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
-                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
-            };
-            return people[result.State];
+            return Request(PersonDBController.Add(new PersonPost(body)));
         }
         [HttpPatch]
         public IActionResult Update([FromBody] PersonPach body)
         {
-            var result = PersonDBController.Update(body);
-            var people = new Dictionary<State, IActionResult>()
-            {
-                { State.Successes, Ok(new { result.Value })},
-                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
-                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
-                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
-            };
-            return people[result.State];
+            return Request(PersonDBController.Update(body));
         }
         [HttpDelete]
         public IActionResult Delite(int id)
         {
-            var result = PersonDBController.Delete(id);
-            var people = new Dictionary<State, IActionResult>()
-            {
-                { State.Successes, Ok(new { result.Value })},
-                { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
-                { State.NullSQLRequest, NotFound(result.ErrorMessage) },
-                { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
-            };
-            return people[result.State];
+            return Request(PersonDBController.Delete(id));
         }
     }
 }
