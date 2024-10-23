@@ -14,7 +14,7 @@ namespace ArtonitRESTAPI.Legasy_Service
     }
     public enum State
     {
-        Successes,//200
+        Successes,//200 
         BadSQLRequest,//400
         NullSQLRequest,//404
         NullDataBase,//500

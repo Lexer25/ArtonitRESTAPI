@@ -11,35 +11,32 @@ namespace OpenAPIArtonit.APIControllers
     public class PersonController : BaseAPIController
     {
         [HttpGet]
-        public IActionResult Get(int id)
+        public IActionResult Get(int id=1)
         {
-            return Request(PersonDBController.GetById(id));
+            return DataBaseStatusToWebStatusCode(PersonDBController.GetById(id));
         }
         [HttpGet(nameof(GetList))]
         public IActionResult GetList(int pageIndex = 1, int pageSize = 10)
         {
-            Console.WriteLine(new Uri(HttpContext.Request.Host.Value + HttpContext.Request.Path));
-            var allpersons = PersonDBController.GetAll(pageIndex, pageSize);
-            if (allpersons.State == State.Successes)
-            {
-                allpersons.Value = new Pagination(allpersons.Value, pageIndex, pageSize);
-            }
-            return Request(allpersons);
+            var request = PersonDBController.GetAll(pageIndex, pageSize);
+            var allpersons = request.Item1;
+            if (allpersons.State == State.Successes) allpersons.Value = new Pagination(allpersons.Value, pageIndex, pageSize, request.Item2);
+            return DataBaseStatusToWebStatusCode(allpersons);
         }
         [HttpPost]
         public IActionResult Add([FromBody] PersonPostSee body)
         {
-            return Request(PersonDBController.Add(new PersonPost(body)));
+            return DataBaseStatusToWebStatusCode(PersonDBController.Add(new PersonPost(body)));
         }
         [HttpPatch]
         public IActionResult Update([FromBody] PersonPach body)
         {
-            return Request(PersonDBController.Update(body));
+            return DataBaseStatusToWebStatusCode(PersonDBController.Update(body));
         }
         [HttpDelete]
         public IActionResult Delite(int id)
         {
-            return Request(PersonDBController.Delete(id));
+            return DataBaseStatusToWebStatusCode(PersonDBController.Delete(id));
         }
     }
 }

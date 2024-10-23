@@ -1,4 +1,5 @@
 ﻿using ArtonitRESTAPI.Legasy_Service;
+using ArtonitRESTAPI.Model;
 using OpenAPIArtonit.DB;
 using OpenAPIArtonit.Legasy_Service;
 using OpenAPIArtonit.Model;
@@ -22,42 +23,41 @@ namespace OpenAPIArtonit.DBControllers
                 where p.ID_PEP = {id}";
             return DatabaseService.Get<PersonGet>(query);
         }
-        public static DatabaseResult GetAll(int pageIndex, int pageSize)
+        public static Tuple<DatabaseResult, int>  GetAll(int pageIndex, int pageSize)
         {
             var userIdentity = ClaimsPrincipal.Current;
             var idPep = userIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            var query = $@"select first {pageSize} skip {pageSize*pageIndex}
+            var query_list = $@"select
+                first {pageSize} skip {pageSize * pageIndex}
                 ID_PEP, ID_DB, ID_ORG, SURNAME, NAME, PATRONYMIC,
                 DATEBIRTH, PLACELIFE, PLACEREG, PHONEHOME, PHONECELLULAR, PHONEWORK,
                 NUMDOC, DATEDOC, PLACEDOC, PHOTO, WORKSTART, WORKEND, ""ACTIVE"" , FLAG,
-                LOGIN, PSWD, PEPTYPE, POST, PLACEBIRTH, NOTE, ID_AREA, TABNUM
+                LOGIN, PSWD, PEPTYPE, POST, PLACEBIRTH, NOTE, ID_AREA, TABNUM";
+            var query_count = $@"select count(*)";
+            var base_query = $@"
                 from people p
                 where p.id_org in (select id_org from 
                 organization_getchild (1, (select p2.id_orgctrl from people p2 where p2.id_pep={1})))
                 ";
-
-            return DatabaseService.GetList<PersonGet>(query);
+            return new Tuple<DatabaseResult, int>
+                (DatabaseService.GetList<PersonGet>(query_list + base_query), 
+                ((COUNTDataBase)DatabaseService.Get<COUNTDataBase>(query_count + base_query).Value).count);
         }
         public static DatabaseResult Add(PersonPost peopleAdd)
         {
             var userIdentity = ClaimsPrincipal.Current;
             var idOrgCtrl = userIdentity?.FindFirst(MyClaimTypes.IdOrgCtrl)?.Value;
 
-            var rdbDatabase = DatabaseService.Get<RDBDatabase>("select GEN_ID (gen_people_id, 1) from RDB$DATABASE");
+            var rdbDatabase = DatabaseService.Get<RBDataBase>("select GEN_ID (gen_people_id, 1) from RDB$DATABASE");
             if (rdbDatabase.State != State.Successes) return rdbDatabase;
             peopleAdd.id_org = 1;
             peopleAdd.id_db = 1;
-            peopleAdd.Id = ((RDBDatabase)rdbDatabase.Value).Id;
+            peopleAdd.Id = ((RBDataBase)rdbDatabase.Value).Id;
 
             if (rdbDatabase.State == State.Successes)
             {
                 var result = DatabaseService.Create(peopleAdd);
-
-                if (result.State == State.Successes)
-                {
-                    result.Value = rdbDatabase.Value;
-                }
+                if (result.State == State.Successes) result.Value = rdbDatabase.Value;
                 return result;
             }
             return rdbDatabase;

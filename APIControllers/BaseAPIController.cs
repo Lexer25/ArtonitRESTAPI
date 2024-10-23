@@ -5,7 +5,7 @@ namespace ArtonitRESTAPI.APIControllers
 {
     public class BaseAPIController : ControllerBase
     {
-        protected IActionResult Request(DatabaseResult result)
+        protected IActionResult DataBaseStatusToWebStatusCode(DatabaseResult result)
         {
             var people = new Dictionary<State, IActionResult>()
             {
@@ -14,7 +14,6 @@ namespace ArtonitRESTAPI.APIControllers
                 { State.NullSQLRequest, NotFound(result.ErrorMessage) },
                 { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
             };
- 
             return people[result.State];
         }
         public class Pagination()
@@ -22,14 +21,14 @@ namespace ArtonitRESTAPI.APIControllers
             public object context { get; set; }
             public int pageIndex { get; set; }
             public int pageSize { get; set; }
-            public Pagination(object context, int pageIndex,int pageSize) : this()
+            public int pageCount { get; set; }
+            public Pagination(object context, int pageIndex,int pageSize,int rowcount) : this()
             {
                 this.context = context;
                 this.pageIndex = pageIndex;
                 this.pageSize = pageSize;
+                this.pageCount = rowcount / pageSize + ((rowcount % pageSize!=0)?1:0);
             }
-
-
         }
     }
 }
