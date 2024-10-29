@@ -1,5 +1,6 @@
 ﻿using ArtonitRESTAPI.APIControllers;
 using ArtonitRESTAPI.Legasy_Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenAPIArtonit.DBControllers;
 using OpenAPIArtonit.Legasy_Service;
@@ -24,17 +25,18 @@ namespace OpenAPIArtonit.APIControllers
             if (allpersons.State == State.Successes) allpersons.Value = new Pagination(allpersons.Value, pageIndex, pageSize, request.Item2);
             return DataBaseStatusToWebStatusCode(allpersons);
         }
-        [HttpPost]
+        
+        [HttpPost,Authorize]
         public IActionResult Add([FromBody] PersonPostSee body)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.Add(new PersonPost(body)));
         }
-        [HttpPatch]
+        [HttpPatch, Authorize]
         public IActionResult Update([FromBody] PersonPach body)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.Update(body));
         }
-        [HttpDelete]
+        [HttpDelete, Authorize]
         public IActionResult Delite(int id)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.Delete(id));

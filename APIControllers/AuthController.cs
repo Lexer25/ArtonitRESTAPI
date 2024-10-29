@@ -11,7 +11,7 @@ namespace ArtonitRESTAPI.APIControllers
         [HttpGet, Route("/login")]
         public IActionResult Login(string username, string pasword)//метод авторизации 
         {
-            if (username == "ADMIN" || pasword == "333")
+            if (username == "ADMIN" || pasword == "4537")
             {
                 var token = CreateJwtToken();
                 return Ok(new { Status = true, Message = "success", Data = new { Token = token } });
