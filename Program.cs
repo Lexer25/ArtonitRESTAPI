@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenAPIArtonit.Legasy_Service;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddWindowsService();//служба
 // Add services to the container.
+builder.Services.AddSingleton(builder.Configuration.GetSection("SettingsDBLog").Get<SettingsDBLog>());//подгрузка конфига
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddAuthentication(c => {

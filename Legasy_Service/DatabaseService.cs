@@ -18,7 +18,7 @@ namespace OpenAPIArtonit.DB
 
             var rows = new List<T>();
 
-            var connectionString = SettingsService.DatabaseConnectionString;
+            var connectionString = SettingsDBLog.GetDatabaseConnectionString();
 
             using (var connection = new FbConnection(connectionString))
             {
@@ -102,7 +102,7 @@ namespace OpenAPIArtonit.DB
 
             LoggerService.Log<DatabaseService>("Info", query);
 
-            using (var connection = new FbConnection(SettingsService.DatabaseConnectionString))
+            using (var connection = new FbConnection(SettingsDBLog.GetDatabaseConnectionString()))
             {
                
                 try
@@ -197,7 +197,7 @@ namespace OpenAPIArtonit.DB
             try
             {
                 Console.WriteLine(query);
-                var connectionString = SettingsService.DatabaseConnectionString;
+                var connectionString = SettingsDBLog.GetDatabaseConnectionString();
 
                 using (var connection = new FbConnection(connectionString))
                 {

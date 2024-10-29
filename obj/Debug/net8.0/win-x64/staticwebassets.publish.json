@@ -1,8 +1,8 @@
 {
   "Version": 1,
-  "Hash": "aiwV+Wc3BoiS3/lMREb0fqm7KwHgYWa8AzDISMQfpIs=",
-  "Source": "OpenAPIArtonit",
-  "BasePath": "_content/OpenAPIArtonit",
+  "Hash": "K0hnD7RvRw9CJA0Rauc1CLzTbZQhOVFTDmypx+VMuwY=",
+  "Source": "ArtonitRESTAPI",
+  "BasePath": "_content/ArtonitRESTAPI",
   "Mode": "Default",
   "ManifestType": "Publish",
   "ReferencedProjectsConfiguration": [],
