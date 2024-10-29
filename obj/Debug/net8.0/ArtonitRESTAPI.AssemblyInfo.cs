@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ArtonitRESTAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c89000a3499666038b0054edd3ce83f2eef24927")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d45ed1cf643b8144696c4a58cdb8ab145ae7d30c")]
 [assembly: System.Reflection.AssemblyProductAttribute("ArtonitRESTAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ArtonitRESTAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
