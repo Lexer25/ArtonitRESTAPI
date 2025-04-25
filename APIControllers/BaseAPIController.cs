@@ -5,6 +5,7 @@ namespace ArtonitRESTAPI.APIControllers
 {
     public class BaseAPIController : ControllerBase
     {
+        //преобразует статус базы данных в статусы HTTP
         protected IActionResult DataBaseStatusToWebStatusCode(DatabaseResult result)
         {
             var people = new Dictionary<State, IActionResult>()
