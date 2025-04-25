@@ -23,11 +23,26 @@ namespace OpenAPIArtonit.APIControllers
             if (allpersons.State == State.Successes) allpersons.Value = new Pagination(allpersons.Value, pageIndex, pageSize, request.Item2);
             return DataBaseStatusToWebStatusCode(allpersons);
         }
+
+
         [HttpPost]
+        
         public IActionResult Add([FromBody] PersonPostSee body)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.Add(new PersonPost(body)));
         }
+        
+       
+        //добавление категории доступа для указанной персоны
+        [HttpPost(nameof(AddAccess))]
+        public IActionResult AddAccess([FromBody] PersonAddAccess body)
+        {
+            return DataBaseStatusToWebStatusCode(PersonDBController.AddAccess(new PersonAddAccess(body)));
+        }
+        
+      
+        
+        
         [HttpPatch]
         public IActionResult Update([FromBody] PersonPach body)
         {

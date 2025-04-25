@@ -43,6 +43,8 @@ namespace OpenAPIArtonit.DBControllers
                 (DatabaseService.GetList<PersonGet>(query_list + base_query), 
                 ((COUNTDataBase)DatabaseService.Get<COUNTDataBase>(query_count + base_query).Value).count);
         }
+
+        //добавить пипла
         public static DatabaseResult Add(PersonPost peopleAdd)
         {
             var userIdentity = ClaimsPrincipal.Current;
@@ -62,6 +64,32 @@ namespace OpenAPIArtonit.DBControllers
             }
             return rdbDatabase;
         }
+
+         //добавить пипла в таблицу ss_accessuser с указанием необходимой категории ему доступа
+        public static DatabaseResult AddAccess(PersonAddAccess peopleAdd)
+        {
+            var userIdentity = ClaimsPrincipal.Current;
+            var idOrgCtrl = userIdentity?.FindFirst(MyClaimTypes.IdOrgCtrl)?.Value;
+
+            var rdbDatabase = DatabaseService.Get<RBDataBase>("select GEN_ID (GEN_SS_ACCESSUSER_ID, 1) from RDB$DATABASE");
+           
+            if (rdbDatabase.State != State.Successes) return rdbDatabase;
+          
+            //peopleAdd.Id_pep = ((RBDataBase)rdbDatabase.Value).Id;
+
+            if (rdbDatabase.State == State.Successes)
+            {
+                // var result = DatabaseService.Create(peopleAdd);
+                var result = DatabaseService.ExecuteNonQuery("INSERT INTO SS_ACCESSUSER (ID_ACCESSUSER,ID_DB,ID_PEP,ID_ACCESSNAME,USERNAME) VALUES (38,1,14020,4,'SYSDBA')");
+                if (result.State == State.Successes) result.Value = rdbDatabase.Value;
+                return result;
+            }
+            return rdbDatabase;
+        }
+
+
+
+
         public static DatabaseResult Update(PersonPach peopleAdd)
         {
             return DatabaseService.Update(peopleAdd, $"ID_PEP={peopleAdd.Id}");

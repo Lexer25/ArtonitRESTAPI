@@ -2,6 +2,18 @@
 
 namespace OpenAPIArtonit.Model
 {
+
+
+    [DatabaseName("ss_accessuser")]
+    abstract public class PeopleBase
+    {
+
+        [DatabaseName("ID_PEP")]
+        public int? Id_pep { get; set; }
+
+
+    }
+    
     [DatabaseName("People")]
     abstract public class PersonBase
     {
@@ -23,8 +35,13 @@ namespace OpenAPIArtonit.Model
         [DatabaseName("ID_PEP")]
         public int? Id { get; set; }
     }
+    
+    
+    
     //post
     public class PersonPostSee : PersonBase { }
+
+   
     public class PersonPost : PersonPostSee
     {
         public PersonPost(PersonPostSee personPostSee)
@@ -42,6 +59,31 @@ namespace OpenAPIArtonit.Model
         [DatabaseName("ID_ORG")]
         public int? id_org { get; set; }
     }
+
+
+   // public class PersonAddAccessSee : PeopleBase { }
+
+    public class PersonAddAccess : PeopleBase
+    {
+        public PersonAddAccess(PeopleBase peopleBase)
+        {
+           
+            this.Id_pep= peopleBase.Id_pep;
+           
+        }
+
+       
+
+        [DatabaseName("ID_ACCESSNAME")]
+        public int? Id_accessname { get; set; }
+
+
+       
+    }
+
+
+
+
     //pach
     public class PersonPach : PersonBase
     { 
