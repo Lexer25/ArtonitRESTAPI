@@ -50,7 +50,7 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ArtonitRestAPI", Version = "1.0.1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Artonit Rest API", Version = "1.0.2" });
 });
 var app = builder.Build();
 
