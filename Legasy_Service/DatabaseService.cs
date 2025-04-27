@@ -196,13 +196,13 @@ namespace OpenAPIArtonit.DB
             LoggerService.Log<DatabaseService>("Info", query);
             try
             {
-                Console.WriteLine(query);
+                Console.WriteLine("199 "+query);
                 var connectionString = SettingsService.DatabaseConnectionString;
 
                 using (var connection = new FbConnection(connectionString))
                 {
                     connection.Open();
-                    Console.WriteLine(query);
+                    Console.WriteLine("205 " + query);
                     try
                     {
                         var cmd = new FbCommand(query, connection);

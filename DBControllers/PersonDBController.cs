@@ -45,23 +45,27 @@ namespace OpenAPIArtonit.DBControllers
         }
 
         //добавить пипла
+        //при этом id_pep игнорируется.
         public static DatabaseResult Add(PersonPost peopleAdd)
         {
             var userIdentity = ClaimsPrincipal.Current;
             var idOrgCtrl = userIdentity?.FindFirst(MyClaimTypes.IdOrgCtrl)?.Value;
 
-            var rdbDatabase = DatabaseService.Get<RBDataBase>("select GEN_ID (gen_people_id, 1) from RDB$DATABASE");
+            var rdbDatabase = DatabaseService.Get<RBDataBase>("select GEN_ID (gen_people_id, 1) from RDB$DATABASE");//получаю новое значение id_pep 
+            
             if (rdbDatabase.State != State.Successes) return rdbDatabase;
             peopleAdd.id_org = 1;
             peopleAdd.id_db = 1;
-            peopleAdd.Id = ((RBDataBase)rdbDatabase.Value).Id;
-
+            peopleAdd.Id_pep = ((RBDataBase)rdbDatabase.Value).Id;
+            Console.WriteLine("60 " + ((RBDataBase)rdbDatabase.Value).Id);
+            Console.WriteLine("61 " + peopleAdd.Id_pep);
             if (rdbDatabase.State == State.Successes)
             {
                 var result = DatabaseService.Create(peopleAdd);
                 if (result.State == State.Successes) result.Value = rdbDatabase.Value;
                 return result;
             }
+            Console.WriteLine("68 " + rdbDatabase);
             return rdbDatabase;
         }
 
@@ -74,8 +78,11 @@ namespace OpenAPIArtonit.DBControllers
             var rdbDatabase = DatabaseService.Get<RBDataBase>("select GEN_ID (GEN_SS_ACCESSUSER_ID, 1) from RDB$DATABASE");
            
             if (rdbDatabase.State != State.Successes) return rdbDatabase;
-          
+
             //peopleAdd.Id_pep = ((RBDataBase)rdbDatabase.Value).Id;
+
+            Console.WriteLine("555"); 
+            return DatabaseService.Create(peopleAdd);
 
             if (rdbDatabase.State == State.Successes)
             {
@@ -92,7 +99,7 @@ namespace OpenAPIArtonit.DBControllers
 
         public static DatabaseResult Update(PersonPach peopleAdd)
         {
-            return DatabaseService.Update(peopleAdd, $"ID_PEP={peopleAdd.Id}");
+            return DatabaseService.Update(peopleAdd, $"ID_PEP={peopleAdd.Id_pep}");
         }
         public static DatabaseResult Delete(int id)
         {

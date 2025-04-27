@@ -4,18 +4,19 @@ namespace OpenAPIArtonit.Model
 {
 
 
-    [DatabaseName("ss_accessuser")]
-    abstract public class PeopleBase
+      
+    [DatabaseName("People")]
+    abstract public class PersonBase
     {
 
         [DatabaseName("ID_PEP")]
         public int? Id_pep { get; set; }
-
-
+       
     }
     
-    [DatabaseName("People")]
-    abstract public class PersonBase
+    //get
+    //модель для добавленя person
+    public class PersonGet : PersonBase 
     {
         [DatabaseName("SURNAME")]
         public string Surname { get; set; }
@@ -29,17 +30,11 @@ namespace OpenAPIArtonit.Model
         [DatabaseName("TABNUM")]
         public string TabNum { get; set; }
     }
-    //get
-    public class PersonGet : PersonBase 
-    {
-        [DatabaseName("ID_PEP")]
-        public int? Id { get; set; }
-    }
     
     
     
     //post
-    public class PersonPostSee : PersonBase { }
+    public class PersonPostSee : PersonGet { }
 
    
     public class PersonPost : PersonPostSee
@@ -52,8 +47,9 @@ namespace OpenAPIArtonit.Model
             this.TabNum = personPostSee.TabNum;
         }
 
-        [DatabaseName("ID_PEP")]
-        public int? Id { get; set; }
+        //[DatabaseName("ID_PEP")]
+        //public int? Id { get; set; }
+
         [DatabaseName("ID_DB")]
         public int? id_db { get; set; }
         [DatabaseName("ID_ORG")]
@@ -63,9 +59,9 @@ namespace OpenAPIArtonit.Model
 
    // public class PersonAddAccessSee : PeopleBase { }
 
-    public class PersonAddAccess : PeopleBase
+    public class PersonAddAccess : PersonBase
     {
-        public PersonAddAccess(PeopleBase peopleBase)
+        public PersonAddAccess(PersonBase peopleBase)
         {
            
             this.Id_pep= peopleBase.Id_pep;
@@ -88,8 +84,9 @@ namespace OpenAPIArtonit.Model
     public class PersonPach : PersonBase
     { 
 
-        [DatabaseName("ID_PEP")]
-        public int? Id { get; set; }
+        //[DatabaseName("ID_PEP")]
+        //public int? Id { get; set; }
+        
         [DatabaseName("ID_DB")]
         public int? id_db { get; set; }
         [DatabaseName("ID_ORG")]
