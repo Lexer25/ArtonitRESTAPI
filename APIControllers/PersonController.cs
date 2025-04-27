@@ -24,7 +24,11 @@ namespace OpenAPIArtonit.APIControllers
             return DataBaseStatusToWebStatusCode(allpersons);
         }
 
-
+        /// <summary>
+        /// Add person
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
         [HttpPost]
         
         public IActionResult Add([FromBody] PersonPostSee body)
@@ -33,7 +37,6 @@ namespace OpenAPIArtonit.APIControllers
         }
         
        
-        //добавление категории доступа для указанной персоны
         /// <summary>
         /// Добавить категорию доступа для person
         /// </summary>
