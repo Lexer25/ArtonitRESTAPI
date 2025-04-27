@@ -59,6 +59,7 @@ namespace OpenAPIArtonit.DBControllers
             peopleAdd.Id_pep = ((RBDataBase)rdbDatabase.Value).Id;
             Console.WriteLine("60 " + ((RBDataBase)rdbDatabase.Value).Id);
             Console.WriteLine("61 " + peopleAdd.Id_pep);
+            Console.WriteLine("62 " + peopleAdd.Name);
             if (rdbDatabase.State == State.Successes)
             {
                 var result = DatabaseService.Create(peopleAdd);
@@ -72,26 +73,31 @@ namespace OpenAPIArtonit.DBControllers
          //добавить пипла в таблицу ss_accessuser с указанием необходимой категории ему доступа
         public static DatabaseResult AddAccess(PersonAddAccess peopleAdd)
         {
-            var userIdentity = ClaimsPrincipal.Current;
+            /*
+             * var userIdentity = ClaimsPrincipal.Current;
             var idOrgCtrl = userIdentity?.FindFirst(MyClaimTypes.IdOrgCtrl)?.Value;
 
             var rdbDatabase = DatabaseService.Get<RBDataBase>("select GEN_ID (GEN_SS_ACCESSUSER_ID, 1) from RDB$DATABASE");
            
             if (rdbDatabase.State != State.Successes) return rdbDatabase;
 
-            //peopleAdd.Id_pep = ((RBDataBase)rdbDatabase.Value).Id;
-
-            Console.WriteLine("555"); 
-            return DatabaseService.Create(peopleAdd);
+            peopleAdd.Id_pep = ((RBDataBase)rdbDatabase.Value).Id;
 
             if (rdbDatabase.State == State.Successes)
             {
-                // var result = DatabaseService.Create(peopleAdd);
-                var result = DatabaseService.ExecuteNonQuery("INSERT INTO SS_ACCESSUSER (ID_ACCESSUSER,ID_DB,ID_PEP,ID_ACCESSNAME,USERNAME) VALUES (38,1,14020,4,'SYSDBA')");
+                 var result = DatabaseService.Create(peopleAdd);
+                //var result = DatabaseService.ExecuteNonQuery("INSERT INTO SS_ACCESSUSER (ID_ACCESSUSER,ID_DB,ID_PEP,ID_ACCESSNAME,USERNAME) VALUES (38,1,14020,4,'SYSDBA')");
                 if (result.State == State.Successes) result.Value = rdbDatabase.Value;
                 return result;
             }
             return rdbDatabase;
+
+            */
+            peopleAdd.id_db = 1;
+            peopleAdd.Username = "REST";
+            
+            var result = DatabaseService.Create(peopleAdd);
+            return result;
         }
 
 

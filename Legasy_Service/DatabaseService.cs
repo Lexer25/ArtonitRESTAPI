@@ -365,10 +365,12 @@ namespace OpenAPIArtonit.DB
             string query;
 
             var attribute = Attribute.GetCustomAttribute(typeof(T), typeof(DatabaseNameAttribute));
-
+            
+            
             if (attribute is DatabaseNameAttribute databaseName)
             {
                 query = $"insert into {databaseName.Value} (";
+                
             }
             else
             {

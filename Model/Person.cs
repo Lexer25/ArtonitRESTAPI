@@ -13,9 +13,10 @@ namespace OpenAPIArtonit.Model
         public int? Id_pep { get; set; }
        
     }
-    
+
     //get
     //модель для добавленя person
+    [DatabaseName("People")]
     public class PersonGet : PersonBase 
     {
         [DatabaseName("SURNAME")]
@@ -57,24 +58,36 @@ namespace OpenAPIArtonit.Model
     }
 
 
-   // public class PersonAddAccessSee : PeopleBase { }
 
-    public class PersonAddAccess : PersonBase
+
+    public class PersonAddAccessSee : PersonBase
     {
-        public PersonAddAccess(PersonBase peopleBase)
-        {
-           
-            this.Id_pep= peopleBase.Id_pep;
-           
-        }
-
-       
 
         [DatabaseName("ID_ACCESSNAME")]
         public int? Id_accessname { get; set; }
 
+    }
 
-       
+
+
+    [DatabaseName("ss_accessuser")]
+
+    public class PersonAddAccess : PersonAddAccessSee
+    {
+        public PersonAddAccess(PersonAddAccessSee peopleBase)
+        {
+            this.Id_pep= peopleBase.Id_pep;
+            this.Id_accessname = peopleBase.Id_accessname;
+        }
+        [DatabaseName("ID_DB")]
+        public int? id_db { get; set; }
+
+        [DatabaseName("USERNAME")]
+        public string Username { get; set; }
+
+
+
+
     }
 
 

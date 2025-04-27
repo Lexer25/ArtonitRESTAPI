@@ -34,10 +34,17 @@ namespace OpenAPIArtonit.APIControllers
         
        
         //добавление категории доступа для указанной персоны
+        /// <summary>
+        /// Добавить категорию доступа для person
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
         [HttpPost(nameof(AddAccess))]
-        public IActionResult AddAccess([FromBody] PersonAddAccess body)
+        public IActionResult AddAccess([FromBody] PersonAddAccessSee body)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.AddAccess(new PersonAddAccess(body)));
+
+
         }
         
       
