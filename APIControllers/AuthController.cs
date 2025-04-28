@@ -9,6 +9,7 @@ namespace ArtonitRESTAPI.APIControllers
     public class AuthController : ControllerBase
     {
         [HttpGet, Route("/login")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Login(string username, string pasword)//метод авторизации 
         {
             if (username == "ADMIN" || pasword == "333")

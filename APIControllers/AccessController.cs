@@ -13,11 +13,18 @@ namespace ArtonitRESTAPI.APIControllers
     {
 
         //получаю список типов идентификаторов
+        /// <summary>
+        /// Получить список категория доступа
+        /// </summary>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="identifire"></param>
+        /// <returns></returns>
         [HttpGet(nameof(GetList))]
-        public IActionResult GetList(int pageIndex = 0, int pageSize = 10, string identifire = "")
+        public IActionResult GetList(int pageIndex = 0, int pageSize = 10, string AccessName = "")
         {
             //var request = IdentifierDBController.GetAll(pageIndex, pageSize);
-            var request = AccessDBController.GetAll(pageIndex, pageSize, identifire);
+            var request = AccessDBController.GetAll(pageIndex, pageSize, AccessName);
             var allpersons = request.Item1;
             if (allpersons.State == State.Successes) allpersons.Value = new Pagination(allpersons.Value, pageIndex, pageSize, request.Item2);
             return DataBaseStatusToWebStatusCode(allpersons);

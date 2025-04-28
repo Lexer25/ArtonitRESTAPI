@@ -15,7 +15,7 @@ namespace ArtonitRESTAPI.DBControllers
             var query_count = $@"select count(*)";
             var base_query = $@"
                 from accessname an ";
-            if (accessName != "") base_query += $@" where an.id_accessname='{accessName}'";
+            if (accessName != "") base_query += $@" where an.name containing '{accessName}'";
             Console.WriteLine("23 " + query_list + base_query);
             Console.WriteLine("24 " + query_count + base_query);
             return new Tuple<DatabaseResult, int>

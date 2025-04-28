@@ -16,7 +16,8 @@ namespace ArtonitRESTAPI.Model
 
         public class IdentifierList : IdentifierBase
         {
-            [DatabaseName("ID_CARDTYPE")]
+            
+        [DatabaseName("ID_CARDTYPE")]
             public string Id_cardtype { get; set; }
                 [DatabaseName("ID_PEP")]
                 public int? Id_pep { get; set; }
