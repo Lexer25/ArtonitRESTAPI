@@ -13,8 +13,14 @@ namespace ArtonitRESTAPI.APIControllers
 
     public class IdentifierTypeConroller : BaseAPIController
     {
-        
+
         //получаю список типов идентификаторов
+        /// <summary>
+        /// Получить список типов идентификаторов
+        /// </summary>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
         [HttpGet(nameof(GetList))]
         public IActionResult GetList(int pageIndex = 0, int pageSize = 10)
         {

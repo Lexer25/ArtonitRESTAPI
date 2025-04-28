@@ -54,7 +54,7 @@ builder.Services.AddSwaggerGen(c =>
     });
     c.SwaggerDoc("v1", new OpenApiInfo {
         Title = "Artonit Rest API",
-        Version = "1.0.2",
+        Version = "1.0.3",
 
         Description = "API для управления данными СКУД Артонит 10",
         //TermsOfService = new Uri("https://example.com/terms"),

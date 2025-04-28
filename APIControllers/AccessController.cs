@@ -14,11 +14,11 @@ namespace ArtonitRESTAPI.APIControllers
 
         //получаю список типов идентификаторов
         /// <summary>
-        /// Получить список категория доступа
+        /// Получить список типов идентификаторов
         /// </summary>
         /// <param name="pageIndex"></param>
         /// <param name="pageSize"></param>
-        /// <param name="identifire"></param>
+        /// <param name="AccessName"></param>
         /// <returns></returns>
         [HttpGet(nameof(GetList))]
         public IActionResult GetList(int pageIndex = 0, int pageSize = 10, string AccessName = "")

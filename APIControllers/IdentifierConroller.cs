@@ -14,8 +14,13 @@ namespace ArtonitRESTAPI.APIControllers
 
     public class IdentifierController : BaseAPIController
     {
-        
+
         //получаю список типов идентификаторов
+        /// <summary>
+        /// Получить список идентификаторов (с разбиением на странмцы), либо поиск идентификатора по его номеру.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
         [HttpGet(nameof(GetList))]
         public IActionResult GetList(int pageIndex = 0, int pageSize = 10,string identifire="")
         {
@@ -26,8 +31,12 @@ namespace ArtonitRESTAPI.APIControllers
             return DataBaseStatusToWebStatusCode(allpersons);
         }
         
-
-
+       
+        /// <summary>
+        /// Добавить идентификатор указанному person
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
          [HttpPost]
         public IActionResult addIdentifierForpeopel([FromBody] IdentifirePostSee body)
         {

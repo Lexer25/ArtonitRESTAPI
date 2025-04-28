@@ -10,11 +10,25 @@ namespace OpenAPIArtonit.APIControllers
     [Route("[controller]")]
     public class PersonController : BaseAPIController
     {
+        
+        
+        /// <summary>
+        /// Получить информацию о person по id_pep
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet]
         public IActionResult Get(int id=1)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.GetById(id));
         }
+
+        /// <summary>
+        /// Получить список person. Список разбит на страницы
+        /// </summary>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
         [HttpGet(nameof(GetList))]
         public IActionResult GetList(int pageIndex = 1, int pageSize = 10)
         {
@@ -25,7 +39,7 @@ namespace OpenAPIArtonit.APIControllers
         }
 
         /// <summary>
-        /// Add person
+        /// Добавить person
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
@@ -51,13 +65,24 @@ namespace OpenAPIArtonit.APIControllers
         }
         
       
-        
+        /// <summary>
+        /// Изменить информацию о person
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
         
         [HttpPatch]
         public IActionResult Update([FromBody] PersonPach body)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.Update(body));
         }
+
+
+        /// <summary>
+        /// Удалить person
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete]
         public IActionResult Delite(int id)
         {

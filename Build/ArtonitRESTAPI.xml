@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ArtonitRESTAPI</name>
+    </assembly>
+    <members>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Get(System.Int32)">
+            <summary>
+            Получить информацию о person по id_pep
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.GetList(System.Int32,System.Int32)">
+            <summary>
+            Получить список person. Список разбит на страницы
+            </summary>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Add(OpenAPIArtonit.Model.PersonPostSee)">
+            <summary>
+            Добавить person
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.AddAccess(OpenAPIArtonit.Model.PersonAddAccessSee)">
+            <summary>
+            Добавить категорию доступа для person
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Update(OpenAPIArtonit.Model.PersonPach)">
+            <summary>
+            Изменить информацию о person
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Delite(System.Int32)">
+            <summary>
+            Удалить person
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessController.GetList(System.Int32,System.Int32,System.String)">
+            <summary>
+            Получить список типов идентификаторов
+            </summary>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <param name="AccessName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierController.GetList(System.Int32,System.Int32,System.String)">
+            <summary>
+            Получить список идентификаторов (с разбиением на странмцы), либо поиск идентификатора по его номеру.
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierController.addIdentifierForpeopel(ArtonitRESTAPI.Model.IdentifirePostSee)">
+            <summary>
+            Добавить идентификатор указанному person
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierTypeConroller.GetList(System.Int32,System.Int32)">
+            <summary>
+            Получить список типов идентификаторов
+            </summary>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <returns></returns>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessBase.Id_accessname">
+            <summary>
+            ID категории доступа
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessBase.Name">
+            <summary>
+            Название категории доступа
+            </summary>
+        </member>
+    </members>
+</doc>
