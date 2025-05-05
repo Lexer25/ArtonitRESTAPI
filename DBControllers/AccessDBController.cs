@@ -22,12 +22,12 @@ namespace ArtonitRESTAPI.DBControllers
             (DatabaseService.GetList<AccessList>(query_list + base_query),
             ((COUNTDataBase)DatabaseService.Get<COUNTDataBase>(query_count + base_query).Value).count);
         }
-        public static DatabaseResult Add(IdentifirePost identifireAdd)
+        public static DatabaseResult Add(AccessForInsert identifireAdd)
         {
-            identifireAdd.Active = 1;
-            identifireAdd.Timestart = "now";
-            identifireAdd.Status = 1;
-            identifireAdd.Id_db = 1;
+            //identifireAdd.Active = 1;
+            //identifireAdd.Timestart = "now";
+            //identifireAdd.Status = 1;
+            //identifireAdd.Id_db = 1;
             var result = DatabaseService.Create(identifireAdd);
             return result;
 

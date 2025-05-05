@@ -11,7 +11,7 @@ namespace ArtonitRESTAPI.APIControllers
     [ApiController]
     [Route("[controller]")]
 
-    public class IdentifierTypeConroller : BaseAPIController
+    public class IdentifierTypeController : BaseAPIController
     {
 
         //получаю список типов идентификаторов

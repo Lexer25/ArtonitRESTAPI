@@ -2,7 +2,7 @@
 
 namespace ArtonitRESTAPI.Model
 {
-    [DatabaseName("ACESSNAME")]
+    [DatabaseName("ACCESSNAME")]
     abstract public class AccessBase // базовый класс для категории доступа access
     {
 
@@ -21,11 +21,30 @@ namespace ArtonitRESTAPI.Model
 
 
     }
+    [DatabaseName("ACCESSNAME")]
+    public class AccessForInsert
+    {
+        [DatabaseName("NAME")]
+        public string Name { get; set; }
+        public AccessForInsert() { }
+        public AccessForInsert(AccessForInsert body)
+        {
+            this.Name = body.Name;
+        }
+    }
+
+
 
 
     public class AccessList : AccessBase
     {
-       
+        public AccessList() { }
+
+        public AccessList(AccessList body)
+        {
+            this.Id_accessname = body.Id_accessname;
+            this.Name = body.Name;
+        }
 
     }
 

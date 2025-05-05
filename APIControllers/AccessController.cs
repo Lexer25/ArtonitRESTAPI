@@ -31,16 +31,16 @@ namespace ArtonitRESTAPI.APIControllers
         }
 
 
-        /*
-
+        /// <summary>
+        /// Добавить право доступа
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
         [HttpPost]
-        public IActionResult addIdentifierForpeopel([FromBody] IdentifirePostSee body)
+        public IActionResult AddAccess([FromBody] AccessForInsert body)
         {
-            if (!Regex.IsMatch(body.Id_card, "[A-F0-9]{8}")) return BadRequest("sdsds");
-            return DataBaseStatusToWebStatusCode(IdentifierDBController.Add(new IdentifirePost(body)));
+            return DataBaseStatusToWebStatusCode(AccessDBController.Add(new AccessForInsert(body)));
         }
 
-
-        */
     }
 }
