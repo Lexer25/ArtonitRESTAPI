@@ -4,6 +4,7 @@ using OpenAPIArtonit.DB;
 using OpenAPIArtonit.Legasy_Service;
 using OpenAPIArtonit.Model;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 
 namespace ArtonitRESTAPI.DBControllers
@@ -29,16 +30,61 @@ namespace ArtonitRESTAPI.DBControllers
         public static DatabaseResult Add(IdentifirePost identifireAdd)
         {
             identifireAdd.Active = 1;
-            identifireAdd.Timestart = "now";
+            identifireAdd.Timestart = DateTime.Now;
             identifireAdd.Status = 1;
-            identifireAdd.Id_db = 1;    
-           var result = DatabaseService.Create(identifireAdd);
+            identifireAdd.Id_db = 1;  
+            //if (identifireAdd.Id_cardtype == 1)
+            //{
+            //    if (!Regex.IsMatch(identifireAdd.Id_card, "[A-F0-9]{8}")) return State.BadSQLRequest("sdsds");
+            //}
+            //else if (identifireAdd.Id_cardtype == 2)
+            //{
+                 
+            //}
+            //else if (identifireAdd.Id_cardtype == 3)
+            //{
+
+            //}
+            //else if (identifireAdd.Id_cardtype == 4)
+            //{
+
+            //}
+            var result = DatabaseService.Create(identifireAdd);
                 return result;
 
             
         }
 
+        public static DatabaseResult DeleteIdentifier(string IdIdentifier)
+        {
+            Console.WriteLine($"=== DB DELETE START ===");
+            Console.WriteLine($"IdIdentifier: '{IdIdentifier}'");
 
+            var query = $"DELETE FROM CARD WHERE ID_CARD='{IdIdentifier}'";
+            Console.WriteLine($"Query: {query}");
+
+            try
+            {
+                var result = DatabaseService.ExecuteNonQuery(query);
+                Console.WriteLine($"ExecuteNonQuery result: {result?.State}");
+                Console.WriteLine($"ExecuteNonQuery value: {result?.Value}");
+                Console.WriteLine($"=== DB DELETE END ===");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in DeleteIdentifier: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
+        }
+
+        public static bool CheckIdPepExists(int idPep)
+        {
+            var query = $@"select count(*) from people p where p.id_pep = {idPep}";
+            var result = ((COUNTDataBase)DatabaseService.Get<COUNTDataBase>(query).Value).count;
+            return result > 0;
+        }
 
     }
 }

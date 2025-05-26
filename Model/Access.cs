@@ -1,4 +1,5 @@
 ﻿using OpenAPIArtonit.Anotation;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace ArtonitRESTAPI.Model
 {
@@ -16,14 +17,21 @@ namespace ArtonitRESTAPI.Model
         /// Название категории доступа
         /// </summary>
         [DatabaseName("NAME")]
+        [SwaggerSchema("Название категории доступа")]
         public string Name { get; set; }
 
 
 
     }
+    /// <summary>
+    /// Метод POST для создания категории доступа
+    /// </summary>
     [DatabaseName("ACCESSNAME")]
     public class AccessForInsert
     {
+        /// <summary>
+        /// Название категории доступа
+        /// </summary>
         [DatabaseName("NAME")]
         public string Name { get; set; }
         public AccessForInsert() { }

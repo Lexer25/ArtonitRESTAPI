@@ -1,42 +1,28 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace OpenAPIArtonit.Legasy_Service
 {
     public class SettingsService
     {
-        private static string fileName = "appsettings.json";
+        private readonly IConfiguration _configuration;
+        public static string MainPath = "C:\\ArtonitRestApi";
 
-        public static string MainPath= "C:\\ArtonitRestApi";
+        public string DatabaseConnectionString { get; private set; }
 
-     //   public static string Url = "http://*:8011";
-
-        public string _databaseConnectionString
+        public SettingsService(IConfiguration configuration)
         {
-            get { return DatabaseConnectionString; }
-            set { DatabaseConnectionString = value; }
+            _configuration = configuration;
+            DatabaseConnectionString = _configuration.GetConnectionString("DatabaseConnectionString");
         }
 
-        public static string DatabaseConnectionString = 
-            "User = SYSDBA; Password = temp; " +
-            "Database = C:\\Program Files (x86)\\Cardsoft\\DuoSE\\Access\\ShieldPro_rest.GDB; " +
-            "DataSource = 127.0.0.1; Port = 3050; Dialect = 3; Charset = win1251; Role =; " +
-            "Connection lifetime = 15; Pooling = true; MinPoolSize = 0; MaxPoolSize = 50; " +
-            "Packet Size = 8192; ServerType = 0;";
-
-
-        public static void Update()
+        public void Update()
         {
-           if (!File.Exists($@"{MainPath}\{fileName}"))
+            if (!Directory.Exists(MainPath))
             {
-                string json = JsonConvert.SerializeObject(new SettingsService());
-                File.WriteAllText($@"{MainPath}\{fileName}", json);
+                Directory.CreateDirectory(MainPath);
             }
-            else
-            {
-                var json = File.ReadAllText($@"{MainPath}\{fileName}");
-                var settings = JsonConvert.DeserializeObject<SettingsService>(json);
-                DatabaseConnectionString = settings._databaseConnectionString;
-            }
+            DatabaseConnectionString = _configuration.GetConnectionString("DatabaseConnectionString");
         }
     }
 }

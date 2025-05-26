@@ -1,5 +1,9 @@
-﻿using OpenAPIArtonit.Anotation;
+﻿using NHibernate.Criterion;
+using OpenAPIArtonit.Anotation;
 using OpenAPIArtonit.Model;
+using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime;
 
 namespace ArtonitRESTAPI.Model
 {
@@ -23,19 +27,45 @@ namespace ArtonitRESTAPI.Model
                 public int? Id_pep { get; set; }
 
         }
-        //что мы вписываем в таблицу card при добавлении 
-        public class IdentifirePostSee : IdentifierBase
-        {
-            [DatabaseName("ID_PEP")]
-            public int? Id_pep { get; set; }
+    //что мы вписываем в таблицу card при добавлении 
+    /// <summary>
+    /// Класс для представления идентификаторов поста.
+    /// </summary>
+    public class IdentifirePostSee : IdentifierBase
+    {
+        /// <summary>
+        /// Идентификатор карты.
+        /// Пример: строка // Идентификатор карты
+        /// </summary>
+        [DatabaseName("ID_CARD")]
+        [SwaggerSchema(Description = "Идентификатор карты. Пример: строка // Идентификатор карты")]
+        [Required(ErrorMessage = "Заполнение Id_card обязательно обязательно")]
+        public string Id_card { get; set; }
 
-             [DatabaseName("ID_CARDTYPE")]
-            public int? Id_cardtype { get; set; }
+        /// <summary>
+        /// Идентификатор PEP.
+        /// Пример: integer // Идентификатор PEP
+        /// </summary>
+        [DatabaseName("ID_PEP")]
+        [SwaggerSchema(Description = "Идентификатор PEP. Пример: integer // Идентификатор PEP")]
+        [Required(ErrorMessage = "Заполнение Id_pep обязательно обязательно")]
+        [Range(1, int.MaxValue, ErrorMessage = "ID_PEP должен быть положительным числом")]
+        public int Id_pep { get; set; }
 
-        }
-        
-        
-        public class IdentifirePost : IdentifirePostSee
+        /// <summary>
+        /// Идентификатор типа карты.
+        /// Пример: integer // Идентификатор типа карты
+        /// </summary>
+        [DatabaseName("ID_CARDTYPE")]
+        [SwaggerSchema(Description = "Идентификатор типа карты. Пример: integer // Идентификатор типа карты")]
+        [Required(ErrorMessage = "Заполнение Id_cardtype обязательно обязательно")]
+        [Range(1, int.MaxValue, ErrorMessage = "Id_cardtype должен быть положительным числом")]
+        public int Id_cardtype { get; set; }
+    }
+
+
+
+    public class IdentifirePost : IdentifirePostSee
         {
             public IdentifirePost(IdentifirePostSee identifirePostSee)
             {
@@ -48,7 +78,7 @@ namespace ArtonitRESTAPI.Model
             public int? Id_db { get; set; }
 
             [DatabaseName("TIMESTART")]
-            public string Timestart { get; set; }
+            public DateTime Timestart { get; set; }
 
              [DatabaseName("STATUS")]
             public int? Status { get; set; }
@@ -62,5 +92,6 @@ namespace ArtonitRESTAPI.Model
 
 
         }
+
     
 }

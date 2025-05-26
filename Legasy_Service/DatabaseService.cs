@@ -2,123 +2,51 @@
 using FirebirdSql.Data.FirebirdClient;
 using OpenAPIArtonit.Anotation;
 using OpenAPIArtonit.Legasy_Service;
-using System.Globalization;
+using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OpenAPIArtonit.DB
 {
     public class DatabaseService
     {
-        public static DatabaseResult GetList<T>(string query)
+        private static ILogger _logger;
+        private static SettingsService _settingsService;
+
+        static DatabaseService()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
+        public static void Initialize(IServiceProvider serviceProvider)
+        {
+            _settingsService = serviceProvider.GetRequiredService<SettingsService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<DatabaseService>>();
+        }
+
+        public static DatabaseResult GetList<T>(string query)
+        {
             query = query.ToUpper();
-            LoggerService.Log<DatabaseService>("Info", query);
+            _logger.LogInformation("Executing query: {Query}", query);
 
             var rows = new List<T>();
 
-            var connectionString = SettingsService.DatabaseConnectionString;
-
-            using (var connection = new FbConnection(connectionString))
+            using (var connection = new FbConnection(_settingsService.DatabaseConnectionString))
             {
                 try
                 {
                     connection.Open();
-
-                    var cmd = new FbCommand(query, connection);
-
-                    using (var dr = cmd.ExecuteReader())
+                    using (var cmd = new FbCommand(query, connection))
                     {
-                        while (dr.Read())
-                        {
-                            var instance = (T)Activator.CreateInstance(typeof(T));
-
-                            var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Static |
-                                BindingFlags.NonPublic | BindingFlags.Public);//СВОЙСТВА МОДЕЛИ
-
-                            foreach (var property in properties)
-                            {
-                                var databaseNameAttribute = (DatabaseNameAttribute)
-                                    Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
-
-                                if (databaseNameAttribute == null) continue;
-
-                                LoggerService.Log<DatabaseService>("INFO", $"{property.PropertyType.Name} | V: {dr[databaseNameAttribute.Value.ToUpper()]}");
-                                try
-                                {
-                                    var dbValue = dr[databaseNameAttribute.Value.ToUpper()];
-                                    var underlyingType = Nullable.GetUnderlyingType(property.PropertyType);
-                                    bool isNullable = underlyingType != null;
-
-                                    if (isNullable && dbValue == DBNull.Value)
-                                    {
-                                        property.SetValue(instance, null); // Установка значения null для nullable типа
-                                    }
-                                    else
-                                    {
-                                        var convertedValue = Convert.ChangeType(dbValue, underlyingType ?? property.PropertyType);
-                                        property.SetValue(instance, convertedValue);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    LoggerService.Log<DatabaseService>("Exception", ex.Message);
-                                    return new DatabaseResult()
-                                    {
-                                        ErrorMessage = ex.Message,
-                                        State = State.NullSQLRequest,
-                                    };
-                                }
-                            }
-
-                            rows.Add(instance);
-                        }
-                    }
-                    return new DatabaseResult()
-                    {
-                        State = State.Successes,
-                        Value = rows
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("ex2");
-                    LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
-                    return new DatabaseResult()
-                    {
-                        ErrorMessage = ex.Message,
-                        State = State.BadSQLRequest,
-                    };
-                }
-            }
-        }
-
-
-        public static DatabaseResult Get<T>(string query)
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            query = query.ToUpper();
-
-            LoggerService.Log<DatabaseService>("Info", query);
-
-            using (var connection = new FbConnection(SettingsService.DatabaseConnectionString))
-            {
-               
-                try
-                {
-                    connection.Open();
-                    try
-                    {
-                        var cmd = new FbCommand(query, connection);
                         using (var dr = cmd.ExecuteReader())
                         {
                             while (dr.Read())
                             {
                                 var instance = (T)Activator.CreateInstance(typeof(T));
-
-                                var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Static |
-                                    BindingFlags.NonPublic | BindingFlags.Public); //СВОЙСТВА МОДЕЛИ
+                                var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
                                 foreach (var property in properties)
                                 {
@@ -135,7 +63,7 @@ namespace OpenAPIArtonit.DB
 
                                         if (isNullable && dbValue == DBNull.Value)
                                         {
-                                            property.SetValue(instance, null); // Установка значения null для nullable типа
+                                            property.SetValue(instance, null);
                                         }
                                         else
                                         {
@@ -145,46 +73,131 @@ namespace OpenAPIArtonit.DB
                                     }
                                     catch (Exception ex)
                                     {
-                                        LoggerService.Log<DatabaseService>("Exception", ex.Message);
-                                        return new DatabaseResult()
+                                        _logger.LogError(ex, "Error parsing data for property {PropertyName} in query: {Query}", property.Name, query);
+                                        return new DatabaseResult
                                         {
-                                            ErrorMessage = ex.Message,
-                                            State = State.BadSQLRequest,
+                                            ErrorMessage = $"Error parsing data for {property.Name}: {ex.Message}",
+                                            State = State.NullSQLRequest
                                         };
                                     }
                                 }
 
-                                return new DatabaseResult()
+                                rows.Add(instance);
+                            }
+                        }
+                    }
+
+                    return new DatabaseResult
+                    {
+                        State = State.Successes,
+                        Value = rows
+                    };
+                }
+                catch (FbException ex)
+                {
+                    _logger.LogError(ex, "Database error executing query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Database error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error executing query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Unexpected error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
+            }
+        }
+
+        public static DatabaseResult Get<T>(string query)
+        {
+            query = query.ToUpper();
+            _logger.LogInformation("Executing query: {Query}", query);
+
+            using (var connection = new FbConnection(_settingsService.DatabaseConnectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    using (var cmd = new FbCommand(query, connection))
+                    {
+                        using (var dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                var instance = (T)Activator.CreateInstance(typeof(T));
+                                var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+                                foreach (var property in properties)
+                                {
+                                    var databaseNameAttribute = (DatabaseNameAttribute)
+                                        Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
+
+                                    if (databaseNameAttribute == null) continue;
+
+                                    try
+                                    {
+                                        var dbValue = dr[databaseNameAttribute.Value.ToUpper()];
+                                        var underlyingType = Nullable.GetUnderlyingType(property.PropertyType);
+                                        bool isNullable = underlyingType != null;
+
+                                        if (isNullable && dbValue == DBNull.Value)
+                                        {
+                                            property.SetValue(instance, null);
+                                        }
+                                        else
+                                        {
+                                            var convertedValue = Convert.ChangeType(dbValue, underlyingType ?? property.PropertyType);
+                                            property.SetValue(instance, convertedValue);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Error parsing data for property {PropertyName} in query: {Query}", property.Name, query);
+                                        return new DatabaseResult
+                                        {
+                                            ErrorMessage = $"Error parsing data for {property.Name}: {ex.Message}",
+                                            State = State.BadSQLRequest
+                                        };
+                                    }
+                                }
+
+                                return new DatabaseResult
                                 {
                                     State = State.Successes,
                                     Value = instance
                                 };
                             }
-                            return new DatabaseResult()
+
+                            return new DatabaseResult
                             {
                                 State = State.NullSQLRequest,
-                                ErrorMessage = "Запрос в базу данных не дал результата"
+                                ErrorMessage = "No results found"
                             };
                         }
-
                     }
-                    catch (Exception ex)
+                }
+                catch (FbException ex)
+                {
+                    _logger.LogError(ex, "Database error executing query: {Query}", query);
+                    return new DatabaseResult
                     {
-                        LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
-                        return new DatabaseResult()
-                        {
-                            ErrorMessage = ex.Message,
-                            State = State.BadSQLRequest,
-                        };
-                    }
+                        ErrorMessage = $"Database error: {ex.Message}",
+                        State = State.NullDataBase
+                    };
                 }
                 catch (Exception ex)
                 {
-                    LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
-                    return new DatabaseResult()
+                    _logger.LogError(ex, "Unexpected error executing query: {Query}", query);
+                    return new DatabaseResult
                     {
-                        ErrorMessage = ex.Message,
-                        State = State.NullDataBase,
+                        ErrorMessage = $"Unexpected error: {ex.Message}",
+                        State = State.NullDataBase
                     };
                 }
             }
@@ -192,274 +205,197 @@ namespace OpenAPIArtonit.DB
 
         public static DatabaseResult ExecuteNonQuery(string query)
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            LoggerService.Log<DatabaseService>("Info", query);
-            try
-            {
-                Console.WriteLine("199 "+query);
-                var connectionString = SettingsService.DatabaseConnectionString;
+            query = query.ToUpper();
+            _logger.LogInformation("Executing non-query: {Query}", query);
 
-                using (var connection = new FbConnection(connectionString))
+            using (var connection = new FbConnection(_settingsService.DatabaseConnectionString))
+            {
+                try
                 {
                     connection.Open();
-                    Console.WriteLine("205 " + query);
-                    try
+                    using (var cmd = new FbCommand(query, connection))
                     {
-                        var cmd = new FbCommand(query, connection);
                         var result = cmd.ExecuteNonQuery();
-                        Console.WriteLine(result);
-                        if(result == 0)
-                            return new DatabaseResult()
-                            {
-                                State = State.NullSQLRequest,
-                            };
-                        return new DatabaseResult()
+
+                        return new DatabaseResult
                         {
                             Value = result,
-                            State = State.Successes
+                            State = result == 0 ? State.NullSQLRequest : State.Successes
                         };
                     }
-                    catch (Exception ex)
-                    {
-                        LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
-                        return new DatabaseResult()
-                        {
-                            State = State.BadSQLRequest,
-                            ErrorMessage = ex.Message
-                        };
-                    }
-
                 }
-            }
-            catch (Exception ex)
-            {
-                LoggerService.Log<DatabaseService>("Exception", $"{ex.Message}");
-                return new DatabaseResult()
+                catch (FbException ex)
                 {
-                    State = State.NullDataBase,
-                    ErrorMessage = ex.Message
-                };
+                    _logger.LogError(ex, "Database error executing non-query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Database error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error executing non-query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Unexpected error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
             }
         }
 
         public static DatabaseResult Create<T>(T instance)
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            string query = GenerateCreateQuery(instance);
-            LoggerService.Log<DatabaseService>("DEBUG", query);
-            Console.WriteLine(query);
-            return ExecuteNonQuery(query);
+            var (query, parameters) = GenerateCreateQuery(instance);
+            _logger.LogDebug("Generated create query: {Query}", query);
+            return ExecuteParameterizedNonQuery(query, parameters);
         }
 
         public static DatabaseResult Update<T>(T instance, string condition)
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            string query = GenerateUpdateQuery(instance, condition);
-
-            return ExecuteNonQuery(query);
+            var (query, parameters) = GenerateUpdateQuery(instance, condition);
+            _logger.LogDebug("Generated update query: {Query}", query);
+            return ExecuteParameterizedNonQuery(query, parameters);
         }
 
-        public static string GenerateUpdateQuery<T>(T instance, string condition)
+        private static DatabaseResult ExecuteParameterizedNonQuery(string query, Dictionary<string, object> parameters)
         {
-            string query;
+            query = query.ToUpper();
+            _logger.LogInformation("Executing parameterized non-query: {Query}", query);
 
-            var attribute = Attribute.GetCustomAttribute(typeof(T), typeof(DatabaseNameAttribute));
-
-            if (attribute is DatabaseNameAttribute databaseName)
+            using (var connection = new FbConnection(_settingsService.DatabaseConnectionString))
             {
-                query = $"update {databaseName.Value} set ";
-            }
-            else
-            {
-                query = $"update {typeof(T).Name} set ";
-            }
+                try
+                {
+                    connection.Open();
+                    using (var cmd = new FbCommand(query, connection))
+                    {
+                        foreach (var param in parameters)
+                        {
+                            cmd.Parameters.AddWithValue(param.Key, param.Value ?? DBNull.Value);
+                        }
 
-            var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Static |
-               BindingFlags.NonPublic | BindingFlags.Public);
+                        var result = cmd.ExecuteNonQuery();
+
+                        return new DatabaseResult
+                        {
+                            Value = result,
+                            State = result == 0 ? State.NullSQLRequest : State.Successes
+                        };
+                    }
+                }
+                catch (FbException ex)
+                {
+                    _logger.LogError(ex, "Database error executing parameterized non-query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Database error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error executing parameterized non-query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Unexpected error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
+            }
+        }
+
+        private static (string Query, Dictionary<string, object> Parameters) GenerateUpdateQuery<T>(T instance, string condition)
+        {
+            var parameters = new Dictionary<string, object>();
+            var queryBuilder = new StringBuilder();
+            var tableAttr = Attribute.GetCustomAttribute(typeof(T), typeof(DatabaseNameAttribute));
+
+            queryBuilder.Append(tableAttr is DatabaseNameAttribute dbName
+                ? $"UPDATE {dbName.Value} SET "
+                : $"UPDATE {typeof(T).Name} SET ");
+
+            var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var setClauses = new List<string>();
+            int paramIndex = 0;
 
             foreach (var property in properties)
             {
                 var value = property.GetValue(instance);
+                if (value == null) continue;
 
-                if (value != null)
-                {
-                    var databaseNameAttribute = (DatabaseNameAttribute)
-                         Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
-
-                    if (databaseNameAttribute != null)
-                    {
-                        var systemWord = (DataBaseSystemWordAttribute)
-                            Attribute.GetCustomAttribute(property, typeof(DataBaseSystemWordAttribute));
-
-                        switch (value.GetType().Name)
-                        {
-                            case "String":
-                                {
-                                    if (systemWord != null)
-                                        query += $@"""{databaseNameAttribute.Value}"" = ";
-                                    else
-                                        query += databaseNameAttribute.Value + " = ";
-
-                                    query += $"'{value}', ";
-                                    break;
-                                }
-                            case "Int32":
-                                {
-                                    var valueInt = Convert.ToInt32(value);
-
-                                    if (systemWord != null)
-                                        query += $@"""{databaseNameAttribute.Value.ToUpper()}"" = ";
-                                    else
-                                        query += databaseNameAttribute.Value.ToUpper() + " = ";
-
-                                    query += value + ", ";
-                                    break;
-                                }
-                            case "DateTime":
-                                {
-                                    DateTime parsedDate = DateTime.ParseExact(value.ToString(), "dd.MM.yyyy H:mm:ss", CultureInfo.InvariantCulture);
-                                    string output = parsedDate.ToString("dd.MM.yyyy");
-
-                                    if (output == "01.01.0001") continue;
-
-                                    if (systemWord != null)
-                                        query += $@"""{databaseNameAttribute.Value.ToUpper()}"" = ";
-                                    else
-                                        query += databaseNameAttribute.Value.ToUpper() + " = ";
-
-                                    query += $"'{output}', ";
-                                    break;
-                                }
-                            case "TimeSpan":
-                                {
-                                    if (value.ToString() == "00:00:00") continue;
-
-                                    if (systemWord != null)
-                                        query += $@"""{databaseNameAttribute.Value.ToUpper()}"" = ";
-                                    else
-                                        query += databaseNameAttribute.Value.ToUpper() + " = ";
-
-                                    query += $"'{value}', ";
-
-                                    break;
-                                }
-                            default:
-                                query += value + ", ";
-                                break;
-                        }
-                    }
-                }
-            }
-
-
-            query = query.Remove(query.Length - 2);
-
-            query += $" where {condition}";
-
-
-            return query;
-        }
-
-        public static string GenerateCreateQuery<T>(T instance)
-        {
-            string query;
-
-            var attribute = Attribute.GetCustomAttribute(typeof(T), typeof(DatabaseNameAttribute));
-            
-            
-            if (attribute is DatabaseNameAttribute databaseName)
-            {
-                query = $"insert into {databaseName.Value} (";
-                
-            }
-            else
-            {
-                query = $"insert into {typeof(T).Name} (";
-            }
-
-            var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Static |
-                BindingFlags.NonPublic | BindingFlags.Public);
-
-            foreach (var property in properties)
-            {
-                var databasePrimaryKeyAttribute = (DatabasePrimaryKeyAttribute)
-                    Attribute.GetCustomAttribute(property, typeof(DatabasePrimaryKeyAttribute));
-
-                if (databasePrimaryKeyAttribute != null) continue;
-
-                var databaseNameAttribute = (DatabaseNameAttribute)
+                var dbNameAttr = (DatabaseNameAttribute)
                     Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
 
-                if (databaseNameAttribute != null)
-                {
-                    var systemWord = (DataBaseSystemWordAttribute)
-                        Attribute.GetCustomAttribute(property, typeof(DataBaseSystemWordAttribute));
+                if (dbNameAttr == null) continue;
 
-                    if (systemWord != null)
-                    {
-                        query += $@"""{databaseNameAttribute.Value}"", ";
-                    }
-                    else
-                    {
-                        query += databaseNameAttribute.Value + ", ";
-                    }
-                }
+                string columnName = dbNameAttr.Value.ToUpper();
+                var systemWord = Attribute.IsDefined(property, typeof(DataBaseSystemWordAttribute));
+                string quote = systemWord ? $"\"{columnName}\"" : columnName;
+                string paramName = $"@p{paramIndex++}";
+
+                setClauses.Add($"{quote} = {paramName}");
+                parameters.Add(paramName, value);
             }
 
-            query = query.Remove(query.Length - 2);
+            if (setClauses.Count == 0)
+            {
+                throw new InvalidOperationException("No valid properties found to update.");
+            }
 
-            query += ") values (";
+            queryBuilder.Append(string.Join(", ", setClauses));
+            queryBuilder.Append($" WHERE {condition}");
+
+            return (queryBuilder.ToString(), parameters);
+        }
+
+        private static (string Query, Dictionary<string, object> Parameters) GenerateCreateQuery<T>(T instance)
+        {
+            var parameters = new Dictionary<string, object>();
+            var queryBuilder = new StringBuilder();
+            var tableAttr = Attribute.GetCustomAttribute(typeof(T), typeof(DatabaseNameAttribute));
+
+            queryBuilder.Append(tableAttr is DatabaseNameAttribute dbName
+                ? $"INSERT INTO {dbName.Value} ("
+                : $"INSERT INTO {typeof(T).Name} (");
+
+            var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var columns = new List<string>();
+            var paramNames = new List<string>();
+            int paramIndex = 0;
 
             foreach (var property in properties)
             {
-                var databasePrimaryKeyAttribute = (DatabasePrimaryKeyAttribute)
-                   Attribute.GetCustomAttribute(property, typeof(DatabasePrimaryKeyAttribute));
+                if (Attribute.IsDefined(property, typeof(DatabasePrimaryKeyAttribute)))
+                    continue;
 
-                if (databasePrimaryKeyAttribute != null) continue;
+                var dbAttr = (DatabaseNameAttribute)Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
+                if (dbAttr == null) continue;
+
+                string column = Attribute.IsDefined(property, typeof(DataBaseSystemWordAttribute))
+                    ? $"\"{dbAttr.Value}\""
+                    : dbAttr.Value;
 
                 var value = property.GetValue(instance);
+                string paramName = $"@p{paramIndex++}";
 
-                if (value != null)
-                {
-                    switch (value.GetType().Name)
-                    {
-                        case "String":
-                            {
-                                query += $"'{value}', ";
-                                break;
-                            }
-                        case "Int32":
-                            {
-                                query += value + ", ";
-                                break;
-                            }
-                        case "DateTime":
-                            {
-                                DateTime parsedDate = DateTime.ParseExact(value.ToString(), "dd.MM.yyyy H:mm:ss", CultureInfo.InvariantCulture);
-                                string output = parsedDate.ToString("dd.MM.yyyy");
-                                query += $"'{output}', ";
-                                break;
-                            }
-                        case "TimeSpan":
-                            {
-                                query += $"'{value}', ";
-                                break;
-                            }
-                        default:
-                            query += value + ", ";
-                            break;
-                    }
-                }
-                else
-                    query += "null, ";
+                columns.Add(column);
+                paramNames.Add(paramName);
+                parameters.Add(paramName, value);
             }
 
-            query = query.Remove(query.Length - 2);
+            if (columns.Count == 0)
+            {
+                throw new InvalidOperationException("No valid properties found to insert.");
+            }
 
-            query += ");";
+            queryBuilder.Append(string.Join(", ", columns));
+            queryBuilder.Append(") VALUES (");
+            queryBuilder.Append(string.Join(", ", paramNames));
+            queryBuilder.Append(");");
 
-            LoggerService.Log<DatabaseService>("INFO", query);
-            return query;
+            return (queryBuilder.ToString(), parameters);
         }
     }
 }

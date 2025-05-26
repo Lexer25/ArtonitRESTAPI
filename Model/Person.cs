@@ -1,4 +1,5 @@
 ﻿using OpenAPIArtonit.Anotation;
+using System.ComponentModel.DataAnnotations;
 
 namespace OpenAPIArtonit.Model
 {
@@ -6,11 +7,14 @@ namespace OpenAPIArtonit.Model
 
       
     [DatabaseName("People")]
-    abstract public class PersonBase
+    public class PersonBase
     {
+        public PersonBase() { }
 
         [DatabaseName("ID_PEP")]
-        public int? Id_pep { get; set; }
+        [Required(ErrorMessage = "Заполнение ID обязательно")]
+        [Range(1, int.MaxValue, ErrorMessage = "ID должен быть положительным числом")]
+        public int Id_pep { get; set; }
        
     }
 
@@ -89,7 +93,34 @@ namespace OpenAPIArtonit.Model
 
 
     }
+    [DatabaseName("CARD")]
+    public class ForAddIdentifier
+    {
 
+
+        [DatabaseName("ID_PEP")]
+        [Required(ErrorMessage = "Заполнение ID_PEP обязательно")]
+        [Range(1, int.MaxValue, ErrorMessage = "ID_PEP должен быть положительным числом")]
+        public string Id_pep { get; set; }
+
+        [DatabaseName("ID_CARD")]
+        [Required(ErrorMessage = "ID_CARD обязателен")]
+        [Range(1, int.MaxValue, ErrorMessage = "ID_CARD должен быть положительным числом")]
+        public int id_card { get; set; }
+
+        [DatabaseName("ID_CARDTYPE")]
+        [Required(ErrorMessage = "ID_CARDTYPE обязателен")]
+        [Range(1, int.MaxValue, ErrorMessage = "ID_CARDTYPE должен быть положительным числом")]
+        public int id_cardtype { get; set; }
+
+        public ForAddIdentifier(){}
+        public ForAddIdentifier(ForAddIdentifier body)
+        {
+            this.Id_pep = body.Id_pep;
+            this.id_card = body.id_card;
+            this.id_cardtype = body.id_cardtype;
+        }
+    }
 
 
 
