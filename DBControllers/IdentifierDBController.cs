@@ -57,26 +57,9 @@ namespace ArtonitRESTAPI.DBControllers
 
         public static DatabaseResult DeleteIdentifier(string IdIdentifier)
         {
-            Console.WriteLine($"=== DB DELETE START ===");
-            Console.WriteLine($"IdIdentifier: '{IdIdentifier}'");
-
             var query = $"DELETE FROM CARD WHERE ID_CARD='{IdIdentifier}'";
-            Console.WriteLine($"Query: {query}");
-
-            try
-            {
                 var result = DatabaseService.ExecuteNonQuery(query);
-                Console.WriteLine($"ExecuteNonQuery result: {result?.State}");
-                Console.WriteLine($"ExecuteNonQuery value: {result?.Value}");
-                Console.WriteLine($"=== DB DELETE END ===");
                 return result;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Exception in DeleteIdentifier: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                throw;
-            }
         }
 
         public static bool CheckIdPepExists(int idPep)

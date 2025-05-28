@@ -205,7 +205,7 @@ namespace OpenAPIArtonit.DB
 
         public static DatabaseResult ExecuteNonQuery(string query)
         {
-            query = query.ToUpper();
+            //query = query.ToUpper();
             _logger.LogInformation("Executing non-query: {Query}", query);
 
             using (var connection = new FbConnection(_settingsService.DatabaseConnectionString))

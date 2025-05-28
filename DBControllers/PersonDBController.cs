@@ -122,10 +122,11 @@ where p.ID_PEP = {id}";
             return DatabaseService.ExecuteNonQuery(query);
         }
 
-        public static DatabaseResult DeleteIdentifier(int IdIdentifier)
+        public static DatabaseResult DeleteIdentifier(string IdIdentifier)
         {
-            var query = $"delete from people where ID_PEP={IdIdentifier}";
-            return DatabaseService.ExecuteNonQuery(query);
+            var query = $"DELETE FROM CARD WHERE ID_CARD='{IdIdentifier}'";
+            var result = DatabaseService.ExecuteNonQuery(query);
+            return result;
         }
 
 

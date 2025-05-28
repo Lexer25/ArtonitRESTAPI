@@ -152,10 +152,21 @@ namespace OpenAPIArtonit.APIControllers
             return DataBaseStatusToWebStatusCode(PersonDBController.Delete(id));
         }
 
-        //[HttpDelete]
-        //public IActionResult DeleteIdentifier(int IdIdentifier)
-        //{
-        //    return DataBaseStatusToWebStatusCode(PersonDBController.DeleteIdentifier(IdIdentifier));
-        //}
+
+        /// <summary>
+        /// Удалить identifier
+        /// </summary>
+        /// <param name="idCard"></param>
+        /// <returns></returns>
+        [HttpDelete("DeleteIdentifier")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult Deletee(string idCard)
+        {
+            return DataBaseStatusToWebStatusCode(IdentifierDBController.DeleteIdentifier(idCard));
+
+        }
     }
 }
