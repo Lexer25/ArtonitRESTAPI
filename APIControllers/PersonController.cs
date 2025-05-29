@@ -18,6 +18,10 @@ namespace OpenAPIArtonit.APIControllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult Get([FromQuery] PersonBase request)
         {
             if (!ModelState.IsValid)
@@ -52,6 +56,10 @@ namespace OpenAPIArtonit.APIControllers
         /// <param name="pageSize"></param>
         /// <returns></returns>
         [HttpGet(nameof(GetList))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult GetList(int pageIndex = 1, int pageSize = 10)
         {
             var request = PersonDBController.GetAll(pageIndex, pageSize);
@@ -66,6 +74,10 @@ namespace OpenAPIArtonit.APIControllers
         /// <param name="body"></param>
         /// <returns></returns>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult Add([FromBody] PersonPostSee body)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.Add(new PersonPost(body)));
@@ -77,6 +89,10 @@ namespace OpenAPIArtonit.APIControllers
         /// <param name="body"></param>
         /// <returns></returns>
         [HttpPost(nameof(AddAccess))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult AddAccess([FromBody] PersonAddAccessSee body)
         {
             return DataBaseStatusToWebStatusCode(PersonDBController.AddAccess(new PersonAddAccess(body)));
@@ -135,6 +151,10 @@ namespace OpenAPIArtonit.APIControllers
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPatch]
         public IActionResult Update([FromBody] PersonPach body)
         {
@@ -146,6 +166,10 @@ namespace OpenAPIArtonit.APIControllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        ///  [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpDelete]
         public IActionResult Delete(int id)
         {
