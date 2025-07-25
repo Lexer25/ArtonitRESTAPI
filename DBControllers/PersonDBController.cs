@@ -64,6 +64,10 @@ where p.ID_PEP = {id}";
             var query_count = $@"select count(*)";
             var base_query = $@"
                 from people p
+                ";
+
+            var base_query2 = $@"
+                from people p
                 where p.id_org in (select id_org from 
                 organization_getchild (1, (select p2.id_orgctrl from people p2 where p2.id_pep={1})))
                 ";

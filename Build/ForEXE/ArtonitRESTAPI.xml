@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ArtonitRESTAPI</name>
+    </assembly>
+    <members>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Get(OpenAPIArtonit.Model.PersonBase)">
+            <summary>
+            Получить информацию о person по id_pep
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.GetList(System.Int32,System.Int32)">
+            <summary>
+            Получить список person. Список разбит на страницы
+            </summary>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Add(OpenAPIArtonit.Model.PersonPostSee)">
+            <summary>
+            Добавить person
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.AddAccess(OpenAPIArtonit.Model.PersonAddAccessSee)">
+            <summary>
+            Добавить категорию доступа для person
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.AddIdentifier(ArtonitRESTAPI.Model.IdentifirePostSee)">
+            <summary>
+            Добавить идентификатор указанному person
+            </summary>
+            <param name="body">
+            id_card - уникальный код карточки
+            
+            id_pep - код сотрудника, которому принадлежит карточка
+            
+            id_cardtype - тип идентификатора карты
+            </param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Update(OpenAPIArtonit.Model.PersonPach)">
+            <summary>
+            Изменить информацию о person
+            </summary>
+            <param name="body"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Delete(System.Int32)">
+            <summary>
+            Удалить person
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessController.GetList(System.Int32,System.Int32,System.String)">
+            <summary>
+            Получить список типов идентификаторов
+            </summary>
+            <param name="pageIndex">Номер страницы</param>
+            <param name="pageSize">Размер страницы</param>
+            <param name="AccessName">Название категории доступа</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessController.AddAccess(ArtonitRESTAPI.Model.AccessForInsert)">
+            <summary>
+            Добавить право доступа
+            </summary>
+            <param name="body">Название категории доступа</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierController.GetList(System.Int32,System.Int32,System.String)">
+            <summary>
+            Получить список идентификаторов (с разбиением на странмцы), либо поиск идентификатора по его номеру.
+            </summary>
+            <param name="pageIndex">Индекс начала выборки</param>
+            <param name="pageSize">Размер выборки</param>
+            <param name="identifire">Название идентификатор</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierController.addIdentifierForpeopel(ArtonitRESTAPI.Model.IdentifirePostSee)">
+            <summary>
+            Добавить идентификатор указанному person
+            </summary>
+            <param name="body">
+            id_card - уникальный код карточки
+            
+            id_pep - код сотрудника, которому принадлежит карточка
+            
+            id_cardtype - тип идентификатора карты
+            </param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierTypeController.GetList(System.Int32,System.Int32)">
+            <summary>
+            Получить список типов идентификаторов
+            </summary>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <returns></returns>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessBase.Id_accessname">
+            <summary>
+            ID категории доступа
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessBase.Name">
+            <summary>
+            Название категории доступа
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.AccessForInsert">
+            <summary>
+            Метод POST для создания категории доступа
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessForInsert.Name">
+            <summary>
+            Название категории доступа
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.IdentifirePostSee">
+            <summary>
+            Класс для представления идентификаторов поста.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifirePostSee.Id_card">
+            <summary>
+            Идентификатор карты.
+            Пример: строка // Идентификатор карты
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifirePostSee.Id_pep">
+            <summary>
+            Идентификатор PEP.
+            Пример: integer // Идентификатор PEP
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifirePostSee.Id_cardtype">
+            <summary>
+            Идентификатор типа карты.
+            Пример: integer // Идентификатор типа карты
+            </summary>
+        </member>
+    </members>
+</doc>

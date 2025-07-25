@@ -29,7 +29,8 @@ namespace OpenAPIArtonit.DB
 
         public static DatabaseResult GetList<T>(string query)
         {
-            query = query.ToUpper();
+            // Удаляем или закомментируем эту строку, чтобы сохранить исходный регистр
+            // query = query.ToUpper();
             _logger.LogInformation("Executing query: {Query}", query);
 
             var rows = new List<T>();
@@ -205,7 +206,7 @@ namespace OpenAPIArtonit.DB
 
         public static DatabaseResult ExecuteNonQuery(string query)
         {
-            //query = query.ToUpper();
+            //SSquery = query.ToUpper();
             _logger.LogInformation("Executing non-query: {Query}", query);
 
             using (var connection = new FbConnection(_settingsService.DatabaseConnectionString))
