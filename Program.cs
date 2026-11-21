@@ -94,7 +94,8 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Artonit Rest API", Version = "1.0.6" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Artonit Rest API v1", Version = "1.1.0" });
+    c.SwaggerDoc("v2", new OpenApiInfo { Title = "Artonit Rest API v2", Version = "1.1.0" });
     c.EnableAnnotations();
     c.ExampleFilters();
 
@@ -149,7 +150,11 @@ using (var scope = app.Services.CreateScope())
 
 
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Artonit REST API v1");
+        c.SwaggerEndpoint("/swagger/v2/swagger.json", "Artonit REST API v2");
+    });
 
 
 app.UseCors("AllowAll");

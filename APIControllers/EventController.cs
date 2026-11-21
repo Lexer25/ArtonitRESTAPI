@@ -1,4 +1,4 @@
-﻿using ArtonitRESTAPI.DBControllers;
+using ArtonitRESTAPI.DBControllers;
 using ArtonitRESTAPI.Model;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -7,6 +7,7 @@ namespace ArtonitRESTAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
     public class EventController : ControllerBase
     {
 

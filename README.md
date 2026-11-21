@@ -17,3 +17,14 @@
 1. Если была произведена установка службы, то для запуска API необходимо ввести следующий адрес "http://localhost:5056/swagger/index.html"
 2. Если была произведена установка без службы, то для запуска необходимо перейти в папку "C:\ArtonitRestAPI", в ней найти файл "ArtonitRESTAPI.exe" и запустить его, 
 после чего ввести в строку браузера "http://localhost:5056/swagger/index.html".
+
+
+REST API v2:
+В версии v2 сотрудник идентифицируется по табельному номеру tabnum вместо id_pep.
+Методы v1 сохранены без изменений. Описание методов v2, правила формирования tabnum
+и примеры запросов находятся в файле REST_API_v2.md.
+
+Swagger разделён на два документа:
+- v1: http://localhost:5056/swagger/v1/swagger.json
+- v2: http://localhost:5056/swagger/v2/swagger.json
+В Swagger UI (http://localhost:5056/swagger/index.html) версия выбирается в правом верхнем углу.

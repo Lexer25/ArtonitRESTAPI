@@ -1,4 +1,4 @@
-﻿using ArtonitRESTAPI.DBControllers;
+using ArtonitRESTAPI.DBControllers;
 using ArtonitRESTAPI.Legasy_Service;
 using ArtonitRESTAPI.Model;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace ArtonitRESTAPI.APIControllers
 {
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
     [Route("[controller]")]
     public class AccessController : BaseAPIController
     {

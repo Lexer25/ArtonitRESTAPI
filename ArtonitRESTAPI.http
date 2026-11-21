@@ -1,6 +1,47 @@
-@ArtonitRESTAPI_HostAddress = http://localhost:5222
+@ArtonitRESTAPI_HostAddress = http://localhost:5056
 
-GET {{ArtonitRESTAPI_HostAddress}}/weatherforecast/
+### Получить сотрудника по tabnum
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Person?tabnum=tn_1
 Accept: application/json
 
-###
+### Список сотрудников
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Person/GetList?pageIndex=0&pageSize=10
+Accept: application/json
+
+### Добавить сотрудника без tabnum (tabnum сформируется как tn_<id_pep>)
+POST {{ArtonitRESTAPI_HostAddress}}/api/v2/Person
+Content-Type: application/json
+
+{
+  "surname": "Иванов",
+  "name": "Иван",
+  "patronymic": "Иванович"
+}
+
+### Добавить сотрудника с указанным tabnum
+POST {{ArtonitRESTAPI_HostAddress}}/api/v2/Person
+Content-Type: application/json
+
+{
+  "surname": "Петров",
+  "name": "Пётр",
+  "patronymic": "Петрович",
+  "tabnum": "T-100"
+}
+
+### Добавить идентификатор сотруднику
+POST {{ArtonitRESTAPI_HostAddress}}/api/v2/Identifier
+Content-Type: application/json
+
+{
+  "id_card": "A1B2C3D4",
+  "tabnum": "T-100",
+  "id_cardtype": 1
+}
+
+### События сотрудника по группе устройств
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Event/passIdDg?tabnum=T-100&fromDate=2026-01-01%2000:00:00&toDate=2026-12-31%2023:59:59&deviceGroupName=Все%20устройства
+Accept: application/json
+
+### Удалить сотрудника
+DELETE {{ArtonitRESTAPI_HostAddress}}/api/v2/Person?tabnum=T-100

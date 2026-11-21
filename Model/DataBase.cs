@@ -12,4 +12,10 @@ namespace ArtonitRESTAPI.Model
         [DatabaseName("COUNT")]
         public int count { get; set; }
     }
+
+    public class PersonIdDataBase
+    {
+        [DatabaseName("ID_PEP")]
+        public int Id_pep { get; set; }
+    }
 }

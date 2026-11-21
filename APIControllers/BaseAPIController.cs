@@ -14,6 +14,8 @@ namespace ArtonitRESTAPI.APIControllers
                 { State.BadSQLRequest, BadRequest(result.ErrorMessage) },
                 { State.NullSQLRequest, NotFound(result.ErrorMessage) },
                 { State.NullDataBase, StatusCode(StatusCodes.Status500InternalServerError) },//поправить
+                { State.NotFound, NotFound(result.ErrorMessage) },
+                { State.Conflict, Conflict(result.ErrorMessage) },
             };
             return people[result.State];
         }

@@ -1,4 +1,4 @@
-﻿using ArtonitRESTAPI.APIControllers;
+using ArtonitRESTAPI.APIControllers;
 using ArtonitRESTAPI.DBControllers;
 using ArtonitRESTAPI.Legasy_Service;
 using ArtonitRESTAPI.Model;
@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 namespace ArtonitRESTAPI.APIControllers
 {
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
     [Route("[controller]")]
 
     public class IdentifierController : BaseAPIController

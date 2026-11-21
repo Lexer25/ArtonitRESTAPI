@@ -19,6 +19,7 @@ namespace ArtonitRESTAPI.Legasy_Service
         NullSQLRequest,//404
         NullDataBase,//500
         NotFound,
+        Conflict,//409
     }
 
 }

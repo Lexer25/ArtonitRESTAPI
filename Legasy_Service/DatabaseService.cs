@@ -204,6 +204,133 @@ namespace OpenAPIArtonit.DB
             }
         }
 
+        /// <summary>
+        /// Выполняет параметризованный запрос и возвращает список строк.
+        /// </summary>
+        public static DatabaseResult GetListParameterized<T>(string query, IDictionary<string, object> parameters)
+        {
+            return ExecuteParameterizedReader<T>(query, parameters, singleRow: false);
+        }
+
+        /// <summary>
+        /// Выполняет параметризованный запрос и возвращает первую строку.
+        /// </summary>
+        public static DatabaseResult GetParameterized<T>(string query, IDictionary<string, object> parameters)
+        {
+            return ExecuteParameterizedReader<T>(query, parameters, singleRow: true);
+        }
+
+        private static DatabaseResult ExecuteParameterizedReader<T>(string query, IDictionary<string, object> parameters, bool singleRow)
+        {
+            _logger.LogInformation("Executing query: {Query}", query);
+
+            using (var connection = new FbConnection(_settingsService.DatabaseConnectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    using (var cmd = new FbCommand(query, connection))
+                    {
+                        foreach (var parameter in parameters)
+                        {
+                            cmd.Parameters.AddWithValue(parameter.Key, parameter.Value ?? DBNull.Value);
+                        }
+
+                        using (var dr = cmd.ExecuteReader())
+                        {
+                            var rows = new List<T>();
+
+                            while (dr.Read())
+                            {
+                                var instance = (T)Activator.CreateInstance(typeof(T));
+                                var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+                                foreach (var property in properties)
+                                {
+                                    var databaseNameAttribute = (DatabaseNameAttribute)
+                                        Attribute.GetCustomAttribute(property, typeof(DatabaseNameAttribute));
+
+                                    if (databaseNameAttribute == null) continue;
+
+                                    try
+                                    {
+                                        var dbValue = dr[databaseNameAttribute.Value.ToUpper()];
+                                        var underlyingType = Nullable.GetUnderlyingType(property.PropertyType);
+                                        bool isNullable = underlyingType != null;
+
+                                        if (isNullable && dbValue == DBNull.Value)
+                                        {
+                                            property.SetValue(instance, null);
+                                        }
+                                        else
+                                        {
+                                            var convertedValue = Convert.ChangeType(dbValue, underlyingType ?? property.PropertyType);
+                                            property.SetValue(instance, convertedValue);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Error parsing data for property {PropertyName} in query: {Query}", property.Name, query);
+                                        return new DatabaseResult
+                                        {
+                                            ErrorMessage = $"Error parsing data for {property.Name}: {ex.Message}",
+                                            State = State.BadSQLRequest
+                                        };
+                                    }
+                                }
+
+                                rows.Add(instance);
+
+                                if (singleRow) break;
+                            }
+
+                            if (singleRow)
+                            {
+                                if (rows.Count == 0)
+                                {
+                                    return new DatabaseResult
+                                    {
+                                        State = State.NullSQLRequest,
+                                        ErrorMessage = "No results found"
+                                    };
+                                }
+
+                                return new DatabaseResult
+                                {
+                                    State = State.Successes,
+                                    Value = rows[0]
+                                };
+                            }
+
+                            return new DatabaseResult
+                            {
+                                State = State.Successes,
+                                Value = rows
+                            };
+                        }
+                    }
+                }
+                catch (FbException ex)
+                {
+                    _logger.LogError(ex, "Database error executing query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Database error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error executing query: {Query}", query);
+                    return new DatabaseResult
+                    {
+                        ErrorMessage = $"Unexpected error: {ex.Message}",
+                        State = State.BadSQLRequest
+                    };
+                }
+            }
+        }
+
         public static DatabaseResult ExecuteNonQuery(string query)
         {
             //SSquery = query.ToUpper();

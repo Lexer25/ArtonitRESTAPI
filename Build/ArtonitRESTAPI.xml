@@ -4,11 +4,11 @@
         <name>ArtonitRESTAPI</name>
     </assembly>
     <members>
-        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Get(System.Int32)">
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Get(OpenAPIArtonit.Model.PersonBase)">
             <summary>
             Получить информацию о person по id_pep
             </summary>
-            <param name="id"></param>
+            <param name="request"></param>
             <returns></returns>
         </member>
         <member name="M:OpenAPIArtonit.APIControllers.PersonController.GetList(System.Int32,System.Int32)">
@@ -33,6 +33,19 @@
             <param name="body"></param>
             <returns></returns>
         </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.AddIdentifier(ArtonitRESTAPI.Model.IdentifirePostSee)">
+            <summary>
+            Добавить идентификатор указанному person
+            </summary>
+            <param name="body">
+            id_card - уникальный код карточки
+            
+            id_pep - код сотрудника, которому принадлежит карточка
+            
+            id_cardtype - тип идентификатора карты
+            </param>
+            <returns></returns>
+        </member>
         <member name="M:OpenAPIArtonit.APIControllers.PersonController.Update(OpenAPIArtonit.Model.PersonPach)">
             <summary>
             Изменить информацию о person
@@ -40,50 +53,544 @@
             <param name="body"></param>
             <returns></returns>
         </member>
-        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Delite(System.Int32)">
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Delete(System.Int32)">
             <summary>
             Удалить person
             </summary>
             <param name="id"></param>
             <returns></returns>
+             [ProducesResponseType(StatusCodes.Status200OK)]
+        </member>
+        <member name="M:OpenAPIArtonit.APIControllers.PersonController.Deletee(System.String)">
+            <summary>
+            Удалить identifier
+            </summary>
+            <param name="idCard"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OpenAPIArtonit.DB.DatabaseService.GetListParameterized``1(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Выполняет параметризованный запрос и возвращает список строк.
+            </summary>
+        </member>
+        <member name="M:OpenAPIArtonit.DB.DatabaseService.GetParameterized``1(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Выполняет параметризованный запрос и возвращает первую строку.
+            </summary>
+        </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2Get">
+            <summary>
+            Сотрудник в REST API v2. Вместо id_pep используется табельный номер tabnum.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Get.TabNum">
+            <summary>
+            Табельный номер сотрудника.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Get.Surname">
+            <summary>
+            Фамилия.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Get.Name">
+            <summary>
+            Имя.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Get.Patronymic">
+            <summary>
+            Отчество.
+            </summary>
+        </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2PostSee">
+            <summary>
+            Тело запроса на добавление сотрудника в REST API v2.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PostSee.TabNum">
+            <summary>
+            Табельный номер. Необязателен: если не указан, формируется как tn_&lt;id_pep&gt;.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PostSee.Surname">
+            <summary>
+            Фамилия.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PostSee.Name">
+            <summary>
+            Имя.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PostSee.Patronymic">
+            <summary>
+            Отчество.
+            </summary>
+        </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2Post">
+            <summary>
+            Сотрудник для вставки в таблицу People.
+            </summary>
+        </member>
+        <member name="M:OpenAPIArtonit.Model.PersonV2Post.#ctor">
+            <summary>
+            Создаёт пустую модель для вставки.
+            </summary>
+        </member>
+        <member name="M:OpenAPIArtonit.Model.PersonV2Post.#ctor(OpenAPIArtonit.Model.PersonV2PostSee)">
+            <summary>
+            Создаёт модель для вставки из тела запроса.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Post.Id_pep">
+            <summary>
+            Внутренний идентификатор. Назначается генератором и в API v2 не передаётся.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Post.id_db">
+            <summary>
+            Идентификатор базы данных.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Post.id_org">
+            <summary>
+            Идентификатор организации.
+            </summary>
+        </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2Created">
+            <summary>
+            Результат добавления сотрудника: назначенный табельный номер.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Created.TabNum">
+            <summary>
+            Табельный номер созданного сотрудника.
+            </summary>
+        </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2Patch">
+            <summary>
+            Тело запроса на изменение сотрудника в REST API v2.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Patch.TabNum">
+            <summary>
+            Табельный номер сотрудника, которого нужно изменить.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Patch.id_db">
+            <summary>
+            Идентификатор базы данных.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Patch.id_org">
+            <summary>
+            Идентификатор организации.
+            </summary>
+        </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2AddAccessSee">
+            <summary>
+            Тело запроса на добавление категории доступа сотруднику в REST API v2.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2AddAccessSee.TabNum">
+            <summary>
+            Табельный номер сотрудника.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2AddAccessSee.Id_accessname">
+            <summary>
+            Идентификатор категории доступа.
+            </summary>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.AccessController.GetList(System.Int32,System.Int32,System.String)">
             <summary>
             Получить список типов идентификаторов
             </summary>
-            <param name="pageIndex"></param>
-            <param name="pageSize"></param>
-            <param name="AccessName"></param>
+            <param name="pageIndex">Номер страницы</param>
+            <param name="pageSize">Размер страницы</param>
+            <param name="AccessName">Название категории доступа</param>
             <returns></returns>
         </member>
-		<member name="M:ArtonitRESTAPI.APIControllers.AccessController.AddAccess(ArtonitRESTAPI.Model.AccessForInsert)">
-			<summary>
-				Добавить право доступа
-			</summary>
-			<param name="body"></param>
-			<returns></returns>
-		</member>		
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessController.AddAccess(ArtonitRESTAPI.Model.AccessForInsert)">
+            <summary>
+            Добавить право доступа
+            </summary>
+            <param name="body">Название категории доступа</param>
+            <returns></returns>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.AccessV2Controller">
+            <summary>
+            REST API v2 для категорий доступа. Контракт совпадает с v1: id_pep здесь не используется.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessV2Controller.GetList(System.Int32,System.Int32,System.String)">
+            <summary>
+            Получить список категорий доступа.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessV2Controller.AddAccess(ArtonitRESTAPI.Model.AccessForInsert)">
+            <summary>
+            Добавить категорию доступа.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.EventV2Controller">
+            <summary>
+            REST API v2 для событий. Сотрудник задаётся табельным номером tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.EventV2Controller.GetPassIdDg(System.String,System.String,System.String,System.String)">
+            <summary>
+            Получить события сотрудника по названию группы устройств за период.
+            </summary>
+            <param name="tabnum">Табельный номер сотрудника</param>
+            <param name="fromDate">Дата и время начала периода</param>
+            <param name="toDate">Дата и время окончания периода</param>
+            <param name="deviceGroupName">Название группы устройств</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.EventV2Controller.GetPassIdAp(System.String,System.String,System.String,System.String)">
+            <summary>
+            Получить события сотрудника по названию точки прохода за период.
+            </summary>
+            <param name="tabnum">Табельный номер сотрудника</param>
+            <param name="fromDate">Дата и время начала периода</param>
+            <param name="toDate">Дата и время окончания периода</param>
+            <param name="accessPointName">Название точки прохода</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.EventV2Controller.GetPassAllDG(System.String,System.String,System.String)">
+            <summary>
+            Получить события за период по названию группы устройств.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.EventV2Controller.GetPassAllAp(System.String,System.String,System.String)">
+            <summary>
+            Получить события за период по названию точки прохода.
+            </summary>
+        </member>
         <member name="M:ArtonitRESTAPI.APIControllers.IdentifierController.GetList(System.Int32,System.Int32,System.String)">
             <summary>
             Получить список идентификаторов (с разбиением на странмцы), либо поиск идентификатора по его номеру.
             </summary>
-            <param name="body"></param>
+            <param name="pageIndex">Индекс начала выборки</param>
+            <param name="pageSize">Размер выборки</param>
+            <param name="identifire">Название идентификатор</param>
             <returns></returns>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.IdentifierController.addIdentifierForpeopel(ArtonitRESTAPI.Model.IdentifirePostSee)">
             <summary>
             Добавить идентификатор указанному person
             </summary>
-            <param name="body"></param>
+            <param name="body">
+            id_card - уникальный код карточки
+            
+            id_pep - код сотрудника, которому принадлежит карточка
+            
+            id_cardtype - тип идентификатора карты
+            </param>
             <returns></returns>
         </member>
-        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierTypeConroller.GetList(System.Int32,System.Int32)">
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierController.Delete(System.String)">
+            <summary>
+            Удалить identifier
+            </summary>
+            <param name="idCard"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierTypeController.GetList(System.Int32,System.Int32)">
             <summary>
             Получить список типов идентификаторов
             </summary>
             <param name="pageIndex"></param>
             <param name="pageSize"></param>
             <returns></returns>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.IdentifierTypeV2Controller">
+            <summary>
+            REST API v2 для типов идентификаторов. Контракт совпадает с v1: id_pep здесь не используется.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierTypeV2Controller.GetList(System.Int32,System.Int32)">
+            <summary>
+            Получить список типов идентификаторов.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.IdentifierV2Controller">
+            <summary>
+            REST API v2 для идентификаторов. Вместо id_pep используется tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.GetList(System.Int32,System.Int32,System.String)">
+            <summary>
+            Получить список идентификаторов (с разбиением на страницы) либо найти идентификатор по номеру.
+            В ответе вместо id_pep возвращается tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.Add(ArtonitRESTAPI.Model.IdentifierV2PostSee)">
+            <summary>
+            Добавить идентификатор сотруднику, найденному по tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.Delete(System.String)">
+            <summary>
+            Удалить идентификатор по номеру карты.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.PersonV2Controller">
+            <summary>
+            REST API v2 для сотрудников. Вместо id_pep используется tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.Get(System.String)">
+            <summary>
+            Получить информацию о сотруднике по tabnum.
+            </summary>
+            <param name="tabnum">Табельный номер сотрудника</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.GetList(System.Int32,System.Int32)">
+            <summary>
+            Получить список сотрудников. Список разбит на страницы.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.Add(OpenAPIArtonit.Model.PersonV2PostSee)">
+            <summary>
+            Добавить сотрудника. Если tabnum не указан, он формируется как tn_&lt;id_pep&gt;.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.AddAccess(OpenAPIArtonit.Model.PersonV2AddAccessSee)">
+            <summary>
+            Добавить категорию доступа сотруднику, найденному по tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.AddIdentifier(ArtonitRESTAPI.Model.IdentifierV2PostSee)">
+            <summary>
+            Добавить идентификатор сотруднику, найденному по tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.Update(OpenAPIArtonit.Model.PersonV2Patch)">
+            <summary>
+            Изменить информацию о сотруднике, найденном по tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.Delete(System.String)">
+            <summary>
+            Удалить сотрудника по tabnum.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.DeleteIdentifier(System.String)">
+            <summary>
+            Удалить идентификатор по номеру карты.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.V2ControllerBase">
+            <summary>
+            Общая логика контроллеров REST API v2: обработка ошибок tabnum и периода дат.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.V2ControllerBase.TabnumLookupError(ArtonitRESTAPI.DBControllers.TabnumLookupResult)">
+            <summary>
+            Преобразует результат поиска tabnum в HTTP-ответ с подходящим кодом.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.V2ControllerBase.TryParsePeriod(System.String,System.String,System.DateTime@,System.DateTime@,System.String@)">
+            <summary>
+            Разбирает и проверяет период fromDate/toDate.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.PersonV2PostSeeValidator">
+            <summary>
+            Валидатор тела запроса на добавление сотрудника в API v2.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2PostSeeValidator.#ctor">
+            <summary>
+            Настраивает правила валидации.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.PersonV2PatchValidator">
+            <summary>
+            Валидатор тела запроса на изменение сотрудника в API v2.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2PatchValidator.#ctor">
+            <summary>
+            Настраивает правила валидации.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.PersonV2AddAccessSeeValidator">
+            <summary>
+            Валидатор тела запроса на добавление категории доступа сотруднику в API v2.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2AddAccessSeeValidator.#ctor">
+            <summary>
+            Настраивает правила валидации.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.IdentifierV2PostSeeValidator">
+            <summary>
+            Валидатор тела запроса на добавление идентификатора в API v2.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2PostSeeValidator.#ctor">
+            <summary>
+            Настраивает правила валидации.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.Controllers.EventController.GetPassIdDg(System.String,System.String,System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="id">id сотрудника</param>
+            <param name="fromDate">Дата и время начала периода отсчета</param>
+            <param name="toDate">Дата и время окончания периода отсчета</param>
+            <param name="deviceGroupName">Название группы устройств</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArtonitRESTAPI.Controllers.EventController.GetPassIdAp(System.String,System.String,System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="id">id сотрудника</param>
+            <param name="fromDate">Дата и время начала периода отсчета</param>
+            <param name="toDate">Дата и время окончания периода отсчета</param>
+            <param name="accessPointName">Название группы устройств</param>
+            <returns></returns>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.EventV2DBController">
+            <summary>
+            Выборка событий для REST API v2. Запросы параметризованы, сотрудник
+            определяется по tabnum (преобразуется в id_pep до вызова методов).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.EventV2DBController.GetPassIdDg(System.Int32,System.DateTime,System.DateTime,System.String)">
+            <summary>
+            События сотрудника по названию группы устройств.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.EventV2DBController.GetPassIdAp(System.Int32,System.DateTime,System.DateTime,System.String)">
+            <summary>
+            События сотрудника по названию точки прохода.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.EventV2DBController.GetPassAllDg(System.DateTime,System.DateTime,System.String)">
+            <summary>
+            Все события по названию группы устройств (с tabnum сотрудника).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.EventV2DBController.GetPassAllAp(System.DateTime,System.DateTime,System.String)">
+            <summary>
+            Все события по названию точки прохода (с tabnum сотрудника).
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.IdentifierV2DBController">
+            <summary>
+            Операции над идентификаторами для REST API v2 (идентификация по tabnum).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.GetAll(System.Int32,System.Int32,System.String)">
+            <summary>
+            Возвращает страницу идентификаторов с tabnum вместо id_pep.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.Add(ArtonitRESTAPI.Model.IdentifierV2PostSee,System.Int32)">
+            <summary>
+            Добавляет идентификатор сотруднику с указанным id_pep.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.PersonV2DBController">
+            <summary>
+            Операции над сотрудником для REST API v2 (идентификация по tabnum).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.Add(OpenAPIArtonit.Model.PersonV2Post)">
+            <summary>
+            Добавляет сотрудника, при необходимости формируя tabnum как tn_&lt;id_pep&gt;.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.AddAccess(System.Int32,System.Int32)">
+            <summary>
+            Добавляет сотруднику категорию доступа.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.Update(System.Int32,OpenAPIArtonit.Model.PersonV2Patch)">
+            <summary>
+            Обновляет сотрудника по его id_pep.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.Delete(System.Int32)">
+            <summary>
+            Удаляет сотрудника по его id_pep.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.TabnumLookupState">
+            <summary>
+            Результат поиска сотрудника по tabnum.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.TabnumLookupState.Found">
+            <summary>Сотрудник найден.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.TabnumLookupState.Invalid">
+            <summary>Некорректный или пустой tabnum.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.TabnumLookupState.NotFound">
+            <summary>Сотрудник не найден.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.TabnumLookupState.Ambiguous">
+            <summary>Найдено несколько сотрудников с одним tabnum.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.TabnumLookupState.DatabaseError">
+            <summary>Ошибка при обращении к базе данных.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.TabnumLookupResult">
+            <summary>
+            Данные результата поиска сотрудника по tabnum.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.TabnumLookupResult.State">
+            <summary>
+            Состояние поиска.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.TabnumLookupResult.IdPep">
+            <summary>
+            Внутренний идентификатор найденного сотрудника.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.TabnumLookupResult.TabNum">
+            <summary>
+            Нормализованный (обрезанный) tabnum.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.TabnumLookupResult.ErrorMessage">
+            <summary>
+            Текст ошибки для ответа клиенту.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.TabnumLookupResult.IsFound">
+            <summary>
+            Признак успешного поиска.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.TabnumResolver">
+            <summary>
+            Преобразует внешний табельный номер tabnum во внутренний id_pep.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.TabnumResolver.MaxLength">
+            <summary>
+            Максимальная длина tabnum (совпадает с VARCHAR(50) в таблице PEOPLE).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.TabnumResolver.Resolve(System.String)">
+            <summary>
+            Находит сотрудника по tabnum и возвращает его id_pep.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.TabnumResolver.Exists(System.String)">
+            <summary>
+            Проверяет, существует ли сотрудник с указанным tabnum.
+            </summary>
         </member>
         <member name="P:ArtonitRESTAPI.Model.AccessBase.Id_accessname">
             <summary>
@@ -93,6 +600,89 @@
         <member name="P:ArtonitRESTAPI.Model.AccessBase.Name">
             <summary>
             Название категории доступа
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.AccessForInsert">
+            <summary>
+            Метод POST для создания категории доступа
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessForInsert.Name">
+            <summary>
+            Название категории доступа
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.EventV2Response">
+            <summary>
+            Событие в REST API v2: сотрудник представлен табельным номером tabnum.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.EventV2Row">
+            <summary>
+            Строка выборки событий с табельным номером сотрудника.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.IdentifirePostSee">
+            <summary>
+            Класс для представления идентификаторов поста.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifirePostSee.Id_card">
+            <summary>
+            Идентификатор карты.
+            Пример: строка // Идентификатор карты
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifirePostSee.Id_pep">
+            <summary>
+            Идентификатор PEP.
+            Пример: integer // Идентификатор PEP
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifirePostSee.Id_cardtype">
+            <summary>
+            Идентификатор типа карты.
+            Пример: integer // Идентификатор типа карты
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.IdentifierV2List">
+            <summary>
+            Идентификатор в REST API v2: вместо id_pep возвращается tabnum.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.Id_card">
+            <summary>
+            Идентификатор карты.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.Id_cardtype">
+            <summary>
+            Идентификатор типа карты.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.TabNum">
+            <summary>
+            Табельный номер сотрудника, которому принадлежит идентификатор.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.IdentifierV2PostSee">
+            <summary>
+            Тело запроса на добавление идентификатора сотруднику в REST API v2.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2PostSee.Id_card">
+            <summary>
+            Идентификатор карты.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2PostSee.TabNum">
+            <summary>
+            Табельный номер сотрудника, которому принадлежит карта.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2PostSee.Id_cardtype">
+            <summary>
+            Идентификатор типа карты.
             </summary>
         </member>
     </members>
