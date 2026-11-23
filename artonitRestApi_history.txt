@@ -1,4 +1,20 @@
 ArtonitRestApi_history.txt
+версия 1.2.0
+22.11.2026
+[+]
+Добавлены команды управления организациями /api/v2/organizations:
+POST (создание), GET /{divcode} (чтение), GET (постраничный список с фильтрами
+parent, name и сортировкой), PUT (полная замена name/parent/flag), PATCH (частичное
+изменение), DELETE (удаление без дочерних организаций и активных сотрудников).
+Код организации во всех маршрутах, параметрах, полях JSON и кодах ошибок обозначается divcode
+(колонка ORGANIZATION.DIVCODE, от division).
+Ответы 4xx/5xx возвращаются в едином формате { "error", "message", "details": [...] }.
+Изменяющие команды требуют токен с ролью администратора: /login?username=ADMIN&pasword=333
+выдаёт роль admin, остальные логины — роль user (только чтение).
+Подготовлены миграции БД в docs/migrations: уникальный индекс UNQ_ORGANIZATION_DIVCODE
+и необязательная колонка ORGANIZATION.DATE_CREATE для неизменяемой даты создания.
+Добавлен дымовой тест docs/smoke-tests/organizations.ps1.
+
 версия 1.1.0
 21.11.2026
 [+]

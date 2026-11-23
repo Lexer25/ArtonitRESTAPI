@@ -27,6 +27,16 @@ namespace OpenAPIArtonit.DB
             _logger = serviceProvider.GetRequiredService<ILogger<DatabaseService>>();
         }
 
+        /// <summary>
+        /// Строка подключения к базе данных из appsettings.json.
+        /// </summary>
+        public static string ConnectionString => _settingsService?.DatabaseConnectionString;
+
+        /// <summary>
+        /// Логгер сервиса для контроллеров, работающих с Firebird напрямую.
+        /// </summary>
+        public static ILogger Logger => _logger;
+
         public static DatabaseResult GetList<T>(string query)
         {
             // Удаляем или закомментируем эту строку, чтобы сохранить исходный регистр

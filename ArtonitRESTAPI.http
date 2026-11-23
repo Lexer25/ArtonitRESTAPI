@@ -45,3 +45,53 @@ Accept: application/json
 
 ### Удалить сотрудника
 DELETE {{ArtonitRESTAPI_HostAddress}}/api/v2/Person?tabnum=T-100
+
+### Авторизация: токен администратора (для изменяющих команд организаций)
+# GET {{ArtonitRESTAPI_HostAddress}}/login?username=ADMIN&pasword=333
+# @token = <вставить token из ответа>
+
+### Список организаций
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations?page=1&pageSize=20&sort=name
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Организация по коду
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations/ORG-001
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Добавить организацию
+POST {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "divcode": "ORG-001",
+  "name": "ООО «Пример»",
+  "parent": "dv_All",
+  "flag": 0
+}
+
+### Изменить организацию (полная замена изменяемых полей)
+PUT {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations/ORG-001
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "ООО «Пример»",
+  "parent": null,
+  "flag": 1
+}
+
+### Обновить организацию (только переданные поля)
+PATCH {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations/ORG-001
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "flag": 1
+}
+
+### Удалить организацию
+DELETE {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations/ORG-001
+Authorization: Bearer {{token}}

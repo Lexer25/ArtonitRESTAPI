@@ -72,6 +72,14 @@ Swagger разделён на два документа:
 | GET | `/api/v2/Event/passIdAp` | События сотрудника по точке прохода |
 | GET | `/api/v2/Event/passAllDG` | Все события по группе устройств |
 | GET | `/api/v2/Event/passAllAp` | Все события по точке прохода |
+| POST | `/api/v2/organizations` | Добавить организацию |
+| GET | `/api/v2/organizations/{divcode}` | Получить организацию |
+| GET | `/api/v2/organizations` | Список организаций с фильтрами и пагинацией |
+| PUT | `/api/v2/organizations/{divcode}` | Полностью заменить изменяемые поля организации |
+| PATCH | `/api/v2/organizations/{divcode}` | Частично изменить организацию |
+| DELETE | `/api/v2/organizations/{divcode}` | Удалить организацию |
+
+Организации описаны отдельно: [docs/ORGANIZATIONS_API_v2.md](docs/ORGANIZATIONS_API_v2.md).
 
 ## Примеры
 

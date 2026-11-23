@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -13,7 +13,11 @@ using Serilog.Events;
 using OpenAPIArtonit.Legasy_Service;
 using FluentValidation.AspNetCore;
 using ArtonitRESTAPI.APIControllers;
+using ArtonitRESTAPI.Model;
+using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using System.Security.Claims;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Default", LogEventLevel.Information)
@@ -65,8 +69,41 @@ builder.Services.AddAuthentication(c =>
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateLifetime = true,
+        RoleClaimType = AuthController.RoleClaimType,
+        NameClaimType = JwtRegisteredClaimNames.Sub,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("this is my custom Secret key for authentication"))
     };
+
+    // Ошибки авторизации возвращаются в едином JSON-формате REST API v2.
+    c.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json; charset=utf-8";
+
+            await context.Response.WriteAsJsonAsync(ApiErrorResults.UnauthorizedPayload());
+        },
+        OnForbidden = async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json; charset=utf-8";
+
+            await context.Response.WriteAsJsonAsync(ApiErrorResults.ForbiddenPayload());
+        }
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    // Изменяющие команды доступны только администратору.
+    options.AddPolicy(OrganizationV2Controller.AdminPolicy, policy =>
+        policy.RequireAssertion(context =>
+            context.User.HasClaim(AuthController.RoleClaimType, AuthController.AdminRole)
+            || context.User.HasClaim(ClaimTypes.Role, AuthController.AdminRole)
+            || context.User.IsInRole(AuthController.AdminRole)));
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -95,7 +132,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Artonit Rest API v1", Version = "1.1.0" });
-    c.SwaggerDoc("v2", new OpenApiInfo { Title = "Artonit Rest API v2", Version = "1.1.0" });
+    c.SwaggerDoc("v2", new OpenApiInfo { Title = "Artonit Rest API v2", Version = "1.2.0" });
     c.EnableAnnotations();
     c.ExampleFilters();
 
@@ -117,7 +154,7 @@ builder.Services.AddControllers()
         fv.AutomaticValidationEnabled = true;
     });
 
-// ����������� ��������
+// Регистрация сервисов
 builder.Services.AddSingleton<SettingsService>();
 
 var urls = builder.Configuration["Urls"];
@@ -142,7 +179,7 @@ lifetime.ApplicationStopping.Register(() =>
     shutdownLogger.Dispose();
 });
 
-// ������������� DatabaseService
+// Инициализация DatabaseService
 using (var scope = app.Services.CreateScope())
 {
     DatabaseService.Initialize(scope.ServiceProvider);
