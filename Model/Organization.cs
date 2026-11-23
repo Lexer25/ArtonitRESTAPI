@@ -172,6 +172,20 @@ namespace ArtonitRESTAPI.Model
     }
 
     /// <summary>
+    /// Тело запроса на сохранение набора категорий доступа организации
+    /// (PUT /api/v2/organizations/{divcode}/accessnames).
+    /// </summary>
+    public class OrganizationAccessNamesPutSee
+    {
+        /// <summary>
+        /// Полный набор идентификаторов категорий доступа (ACCESSNAME.ID_ACCESSNAME).
+        /// Пустой массив очищает набор; дубликаты игнорируются.
+        /// </summary>
+        [JsonPropertyName("accessnames")]
+        public List<int>? AccessNames { get; set; }
+    }
+
+    /// <summary>
     /// Уточнение к ошибке валидации.
     /// </summary>
     public class ApiErrorDetail

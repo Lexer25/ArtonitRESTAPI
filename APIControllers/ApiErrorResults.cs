@@ -1,4 +1,4 @@
-﻿using ArtonitRESTAPI.Model;
+using ArtonitRESTAPI.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -48,6 +48,12 @@ namespace ArtonitRESTAPI.APIControllers
 
         /// <summary>Родительская организация не существует.</summary>
         public const string ParentNotFoundError = "PARENT_NOT_FOUND";
+
+        /// <summary>Категория доступа не существует.</summary>
+        public const string AccessNameNotFoundError = "ACCESSNAME_NOT_FOUND";
+
+        /// <summary>В базе отсутствует таблица связей SS_ACCESSORG.</summary>
+        public const string AccessOrgUnavailableError = "SS_ACCESSORG_UNAVAILABLE";
 
         /// <summary>Внутренняя ошибка сервера.</summary>
         public const string InternalError = "INTERNAL_ERROR";
@@ -164,6 +170,17 @@ namespace ArtonitRESTAPI.APIControllers
         }
 
         /// <summary>
+        /// 404 NOT_FOUND для сотрудника.
+        /// </summary>
+        public static ObjectResult PersonNotFound(string tabnum)
+        {
+            return Create(
+                StatusCodes.Status404NotFound,
+                NotFoundError,
+                $"Сотрудник с tabnum '{tabnum}' не найден");
+        }
+
+        /// <summary>
         /// 409 DUPLICATE_DIVCODE.
         /// </summary>
         public static ObjectResult DuplicateDivCode(string divCode)
@@ -216,6 +233,41 @@ namespace ArtonitRESTAPI.APIControllers
                 StatusCodes.Status422UnprocessableEntity,
                 ParentNotFoundError,
                 $"Родительская организация с divcode={divCode} не найдена");
+        }
+
+        /// <summary>
+        /// 422 ACCESSNAME_NOT_FOUND: перечисленные категории доступа не существуют.
+        /// </summary>
+        public static ObjectResult AccessNamesNotFound(IReadOnlyCollection<int> idAccessNames)
+        {
+            const int maxListed = 20;
+
+            var ids = idAccessNames.Take(maxListed).ToList();
+            var listed = string.Join(", ", ids);
+
+            var message = idAccessNames.Count == 0
+                ? "Категория доступа не найдена"
+                : idAccessNames.Count > maxListed
+                    ? $"Категории доступа с id_accessname={listed} и ещё {idAccessNames.Count - maxListed} не найдены"
+                    : $"Категории доступа с id_accessname={listed} не найдены";
+
+            return Create(
+                StatusCodes.Status422UnprocessableEntity,
+                AccessNameNotFoundError,
+                message,
+                new List<ApiErrorDetail> { new ApiErrorDetail { Field = "accessnames", Issue = "not_found" } });
+        }
+
+        /// <summary>
+        /// 409 SS_ACCESSORG_UNAVAILABLE: в базе нет таблицы связей организаций
+        /// с категориями доступа, сохранять связи некуда.
+        /// </summary>
+        public static ObjectResult AccessOrgUnavailable()
+        {
+            return Create(
+                StatusCodes.Status409Conflict,
+                AccessOrgUnavailableError,
+                "Сохранение невозможно: в базе отсутствует таблица SS_ACCESSORG");
         }
 
         /// <summary>

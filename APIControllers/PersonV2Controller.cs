@@ -1,6 +1,7 @@
 using ArtonitRESTAPI.DBControllers;
 using ArtonitRESTAPI.Legasy_Service;
 using ArtonitRESTAPI.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenAPIArtonit.DBControllers;
 using OpenAPIArtonit.Model;
@@ -15,6 +16,11 @@ namespace ArtonitRESTAPI.APIControllers
     [Route("api/v2/Person")]
     public class PersonV2Controller : V2ControllerBase
     {
+        /// <summary>
+        /// Максимальное число категорий доступа в одном запросе сохранения набора.
+        /// </summary>
+        private const int MaxAccessNamesCount = 1000;
+
         /// <summary>
         /// Получить информацию о сотруднике по tabnum.
         /// </summary>
@@ -124,6 +130,102 @@ namespace ArtonitRESTAPI.APIControllers
         }
 
         /// <summary>
+        /// Получить набор категорий доступа сотрудника, найденного по tabnum.
+        /// Источник — таблица связей SS_ACCESSUSER.
+        /// </summary>
+        /// <param name="tabnum">Табельный номер сотрудника.</param>
+        [HttpGet("Access")]
+        [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+        public IActionResult GetAccess([FromQuery(Name = "tabnum")] string? tabnum)
+        {
+            var lookup = TabnumResolver.Resolve(tabnum);
+            if (!lookup.IsFound) return PersonLookupError(lookup);
+
+            var result = PersonV2DBController.GetAccessNames(lookup.IdPep);
+
+            return result.Status switch
+            {
+                PersonAccessOperationStatus.Success => Ok(result.Items),
+                PersonAccessOperationStatus.NotFound => ApiErrorResults.PersonNotFound(lookup.TabNum),
+                _ => ApiErrorResults.Internal()
+            };
+        }
+
+        /// <summary>
+        /// Сохранить набор категорий доступа сотрудника: полная замена связей
+        /// в SS_ACCESSUSER. Недостающие связи добавляются, лишние удаляются;
+        /// пустой массив очищает набор.
+        /// </summary>
+        /// <param name="body">Табельный номер и полный набор: поле accessnames.</param>
+        [HttpPut("Access")]
+        [Authorize(Policy = AdminPolicy)]
+        [JsonBody]
+        [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status422UnprocessableEntity)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+        public IActionResult SaveAccess([FromBody] PersonV2AccessPutSee? body)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ApiErrorResults.FromModelState(ModelState);
+            }
+
+            if (body == null)
+            {
+                return ApiErrorResults.Validation("Тело запроса обязательно");
+            }
+
+            var validation = new PersonV2AccessPutSeeValidator().Validate(body);
+            if (!validation.IsValid)
+            {
+                return BadRequest(validation.Errors.Select(e => e.ErrorMessage));
+            }
+
+            if (body.AccessNames == null)
+            {
+                return ApiErrorResults.Validation(
+                    "accessnames", "required",
+                    "Поле accessnames обязательно: передайте массив идентификаторов категорий доступа или пустой массив");
+            }
+
+            if (body.AccessNames.Count > MaxAccessNamesCount)
+            {
+                return ApiErrorResults.Validation(
+                    "accessnames", "too_long",
+                    $"Поле accessnames не должно содержать больше {MaxAccessNamesCount} идентификаторов");
+            }
+
+            if (body.AccessNames.Any(id => id < 0))
+            {
+                return ApiErrorResults.Validation(
+                    "accessnames", "invalid_value",
+                    "Идентификаторы категорий доступа не могут быть отрицательными");
+            }
+
+            var lookup = TabnumResolver.Resolve(body.TabNum);
+            if (!lookup.IsFound) return PersonLookupError(lookup);
+
+            var result = PersonV2DBController.SaveAccessNames(lookup.IdPep, body.AccessNames);
+
+            return result.Status switch
+            {
+                PersonAccessOperationStatus.Success => Ok(result.Items),
+                PersonAccessOperationStatus.NotFound => ApiErrorResults.PersonNotFound(lookup.TabNum),
+                PersonAccessOperationStatus.AccessNameNotFound => ApiErrorResults.AccessNamesNotFound(
+                    result.MissingAccessNames),
+                _ => ApiErrorResults.Internal()
+            };
+        }
+
+        /// <summary>
         /// Добавить идентификатор сотруднику, найденному по tabnum.
         /// </summary>
         [HttpPost(nameof(AddIdentifier))]
@@ -182,6 +284,59 @@ namespace ArtonitRESTAPI.APIControllers
         }
 
         /// <summary>
+        /// Полностью заменить ФИО сотрудника, найденного по tabnum:
+        /// фамилия обязательна, имя и отчество могут быть пустыми.
+        /// </summary>
+        /// <param name="body">Табельный номер и новые значения: surname, name, patronymic.</param>
+        [HttpPut]
+        [Authorize(Policy = AdminPolicy)]
+        [JsonBody]
+        [ProducesResponseType(typeof(PersonV2Get), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+        public IActionResult ReplaceName([FromBody] PersonV2PutSee? body)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ApiErrorResults.FromModelState(ModelState);
+            }
+
+            if (body == null)
+            {
+                return ApiErrorResults.Validation("Тело запроса обязательно");
+            }
+
+            var validation = new PersonV2PutSeeValidator().Validate(body);
+            if (!validation.IsValid)
+            {
+                return BadRequest(validation.Errors.Select(e => e.ErrorMessage));
+            }
+
+            var lookup = TabnumResolver.Resolve(body.TabNum);
+            if (!lookup.IsFound) return PersonLookupError(lookup);
+
+            var result = PersonV2DBController.UpdateName(lookup.IdPep, body);
+
+            return result.State switch
+            {
+                State.Successes => Ok(new PersonV2Get
+                {
+                    TabNum = lookup.TabNum,
+                    Surname = body.Surname.Trim(),
+                    Name = (body.Name ?? string.Empty).Trim(),
+                    Patronymic = (body.Patronymic ?? string.Empty).Trim()
+                }),
+                State.NotFound => ApiErrorResults.PersonNotFound(lookup.TabNum),
+                State.BadSQLRequest => BadRequest(result.ErrorMessage),
+                _ => ApiErrorResults.Internal()
+            };
+        }
+
+        /// <summary>
         /// Удалить сотрудника по tabnum.
         /// </summary>
         [HttpDelete]
@@ -214,6 +369,25 @@ namespace ArtonitRESTAPI.APIControllers
             }
 
             return DataBaseStatusToWebStatusCode(IdentifierDBController.DeleteIdentifier(idCard));
+        }
+
+        /// <summary>
+        /// Ошибка поиска сотрудника по tabnum в едином формате REST API v2.
+        /// Используется методами версии 1.6.0 (ФИО и набор категорий), чтобы
+        /// клиент получал машиночитаемый код ошибки, а не строку.
+        /// </summary>
+        private IActionResult PersonLookupError(TabnumLookupResult lookup)
+        {
+            return lookup.State switch
+            {
+                TabnumLookupState.Invalid => ApiErrorResults.Validation(lookup.ErrorMessage),
+                TabnumLookupState.NotFound => ApiErrorResults.PersonNotFound(lookup.TabNum),
+                TabnumLookupState.Ambiguous => ApiErrorResults.Create(
+                    StatusCodes.Status409Conflict,
+                    "AMBIGUOUS_TABNUM",
+                    lookup.ErrorMessage),
+                _ => ApiErrorResults.Internal()
+            };
         }
 
         private static PersonV2Get ToV2(PersonGet person)

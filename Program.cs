@@ -132,7 +132,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Artonit Rest API v1", Version = "1.1.0" });
-    c.SwaggerDoc("v2", new OpenApiInfo { Title = "Artonit Rest API v2", Version = "1.4.0" });
+    c.SwaggerDoc("v2", new OpenApiInfo { Title = "Artonit Rest API v2", Version = "1.6.0" });
     c.EnableAnnotations();
     c.ExampleFilters();
 

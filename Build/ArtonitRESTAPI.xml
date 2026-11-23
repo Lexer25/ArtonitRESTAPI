@@ -198,6 +198,47 @@
             Идентификатор организации.
             </summary>
         </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2PutSee">
+            <summary>
+            Тело запроса на изменение ФИО сотрудника в REST API v2.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PutSee.TabNum">
+            <summary>
+            Табельный номер сотрудника, которого нужно изменить.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PutSee.Surname">
+            <summary>
+            Фамилия. Обязательна: пустая фамилия не сохраняется.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PutSee.Name">
+            <summary>
+            Имя. Может быть пустым.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2PutSee.Patronymic">
+            <summary>
+            Отчество. Может быть пустым.
+            </summary>
+        </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2AccessPutSee">
+            <summary>
+            Тело запроса на замену набора категорий доступа сотрудника в REST API v2.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2AccessPutSee.TabNum">
+            <summary>
+            Табельный номер сотрудника.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2AccessPutSee.AccessNames">
+            <summary>
+            Полный набор идентификаторов категорий доступа: поле accessnames.
+            Пустой массив очищает набор, отсутствие поля — ошибка.
+            </summary>
+        </member>
         <member name="T:OpenAPIArtonit.Model.PersonV2AddAccessSee">
             <summary>
             Тело запроса на добавление категории доступа сотруднику в REST API v2.
@@ -310,6 +351,12 @@
         <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.ParentNotFoundError">
             <summary>Родительская организация не существует.</summary>
         </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.AccessNameNotFoundError">
+            <summary>Категория доступа не существует.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.AccessOrgUnavailableError">
+            <summary>В базе отсутствует таблица связей SS_ACCESSORG.</summary>
+        </member>
         <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.InternalError">
             <summary>Внутренняя ошибка сервера.</summary>
         </member>
@@ -356,6 +403,11 @@
             404 NOT_FOUND для организации.
             </summary>
         </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.PersonNotFound(System.String)">
+            <summary>
+            404 NOT_FOUND для сотрудника.
+            </summary>
+        </member>
         <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.DuplicateDivCode(System.String)">
             <summary>
             409 DUPLICATE_DIVCODE.
@@ -379,6 +431,17 @@
         <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.ParentNotFound(System.String)">
             <summary>
             422 PARENT_NOT_FOUND.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.AccessNamesNotFound(System.Collections.Generic.IReadOnlyCollection{System.Int32})">
+            <summary>
+            422 ACCESSNAME_NOT_FOUND: перечисленные категории доступа не существуют.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.AccessOrgUnavailable">
+            <summary>
+            409 SS_ACCESSORG_UNAVAILABLE: в базе нет таблицы связей организаций
+            с категориями доступа, сохранять связи некуда.
             </summary>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.RootOrganizationDelete(System.String)">
@@ -419,6 +482,12 @@
         <member name="F:ArtonitRESTAPI.APIControllers.AuthController.UserRole">
             <summary>
             Роль обычного пользователя: только чтение.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.BaseAPIController.AdminPolicy">
+            <summary>
+            Имя политики авторизации для изменяющих команд: требуется роль
+            администратора.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.APIControllers.EventV2Controller">
@@ -552,6 +621,11 @@
             Имя политики авторизации для изменяющих команд.
             </summary>
         </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.MaxAccessNamesCount">
+            <summary>
+            Максимальное число категорий доступа в одном запросе сохранения набора.
+            </summary>
+        </member>
         <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.GetList(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String)">
             <summary>
             Получить список организаций с фильтрацией и пагинацией.
@@ -574,6 +648,14 @@
             Источник — таблица связей SS_ACCESSORG.
             </summary>
             <param name="divcode">Код организации.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.SaveAccessNames(System.String,ArtonitRESTAPI.Model.OrganizationAccessNamesPutSee)">
+            <summary>
+            Сохранить набор категорий доступа организации: полная замена связей в SS_ACCESSORG.
+            Недостающие связи добавляются, лишние удаляются; пустой массив очищает набор.
+            </summary>
+            <param name="divcode">Код организации.</param>
+            <param name="body">Полный набор идентификаторов категорий доступа: поле accessnames.</param>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.Create(ArtonitRESTAPI.Model.OrganizationPostSee)">
             <summary>
@@ -606,6 +688,11 @@
             REST API v2 для сотрудников. Вместо id_pep используется tabnum.
             </summary>
         </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.PersonV2Controller.MaxAccessNamesCount">
+            <summary>
+            Максимальное число категорий доступа в одном запросе сохранения набора.
+            </summary>
+        </member>
         <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.Get(System.String)">
             <summary>
             Получить информацию о сотруднике по tabnum.
@@ -627,6 +714,21 @@
             Добавить категорию доступа сотруднику, найденному по tabnum.
             </summary>
         </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.GetAccess(System.String)">
+            <summary>
+            Получить набор категорий доступа сотрудника, найденного по tabnum.
+            Источник — таблица связей SS_ACCESSUSER.
+            </summary>
+            <param name="tabnum">Табельный номер сотрудника.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.SaveAccess(OpenAPIArtonit.Model.PersonV2AccessPutSee)">
+            <summary>
+            Сохранить набор категорий доступа сотрудника: полная замена связей
+            в SS_ACCESSUSER. Недостающие связи добавляются, лишние удаляются;
+            пустой массив очищает набор.
+            </summary>
+            <param name="body">Табельный номер и полный набор: поле accessnames.</param>
+        </member>
         <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.AddIdentifier(ArtonitRESTAPI.Model.IdentifierV2PostSee)">
             <summary>
             Добавить идентификатор сотруднику, найденному по tabnum.
@@ -637,6 +739,13 @@
             Изменить информацию о сотруднике, найденном по tabnum.
             </summary>
         </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.ReplaceName(OpenAPIArtonit.Model.PersonV2PutSee)">
+            <summary>
+            Полностью заменить ФИО сотрудника, найденного по tabnum:
+            фамилия обязательна, имя и отчество могут быть пустыми.
+            </summary>
+            <param name="body">Табельный номер и новые значения: surname, name, patronymic.</param>
+        </member>
         <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.Delete(System.String)">
             <summary>
             Удалить сотрудника по tabnum.
@@ -645,6 +754,13 @@
         <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.DeleteIdentifier(System.String)">
             <summary>
             Удалить идентификатор по номеру карты.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.PersonLookupError(ArtonitRESTAPI.DBControllers.TabnumLookupResult)">
+            <summary>
+            Ошибка поиска сотрудника по tabnum в едином формате REST API v2.
+            Используется методами версии 1.6.0 (ФИО и набор категорий), чтобы
+            клиент получал машиночитаемый код ошибки, а не строку.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.APIControllers.V2ControllerBase">
@@ -678,6 +794,26 @@
             </summary>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.PersonV2PatchValidator.#ctor">
+            <summary>
+            Настраивает правила валидации.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.PersonV2PutSeeValidator">
+            <summary>
+            Валидатор тела запроса на изменение ФИО сотрудника в API v2.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2PutSeeValidator.#ctor">
+            <summary>
+            Настраивает правила валидации.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.PersonV2AccessPutSeeValidator">
+            <summary>
+            Валидатор тела запроса на замену набора категорий доступа сотрудника в API v2.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2AccessPutSeeValidator.#ctor">
             <summary>
             Настраивает правила валидации.
             </summary>
@@ -853,6 +989,12 @@
         <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.RootOrganization">
             <summary>Корневую организацию удалить нельзя.</summary>
         </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.AccessNameNotFound">
+            <summary>Категория доступа не существует.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.AccessOrgUnavailable">
+            <summary>В базе отсутствует таблица связей SS_ACCESSORG.</summary>
+        </member>
         <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.DatabaseError">
             <summary>Ошибка базы данных.</summary>
         </member>
@@ -935,6 +1077,23 @@
         <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesResult.ErrorMessage">
             <summary>Текст ошибки БД для журнала.</summary>
         </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesSaveResult">
+            <summary>
+            Результат сохранения набора категорий доступа организации.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesSaveResult.Status">
+            <summary>Состояние операции.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesSaveResult.Items">
+            <summary>Сохранённый набор идентификаторов категорий доступа по возрастанию.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesSaveResult.MissingAccessNames">
+            <summary>Идентификаторы категорий доступа, которых нет в ACCESSNAME.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesSaveResult.ErrorMessage">
+            <summary>Текст ошибки БД для журнала.</summary>
+        </member>
         <member name="T:ArtonitRESTAPI.DBControllers.OrganizationMutationResult">
             <summary>
             Результат создания или изменения организации.
@@ -1012,6 +1171,21 @@
             </summary>
             <param name="divCode">Код организации.</param>
         </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.SaveAccessNames(System.String,System.Collections.Generic.IReadOnlyCollection{System.Int32})">
+            <summary>
+            Сохраняет набор категорий доступа организации: недостающие связи добавляются,
+            лишние удаляются. Изменения выполняются одной транзакцией, строка организации
+            блокируется, поэтому параллельные сохранения не пересекаются.
+            </summary>
+            <param name="divCode">Код организации.</param>
+            <param name="accessNames">Полный набор идентификаторов категорий доступа.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.SaveAccessNamesOnce(System.String,System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Одна попытка сохранения набора категорий доступа в отдельной транзакции.
+            Конфликты блокировок не перехватывает: их обрабатывает вызывающий метод.
+            </summary>
+        </member>
         <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.Create(System.String,System.String,System.String,System.Int32)">
             <summary>
             Создаёт организацию в транзакции.
@@ -1032,9 +1206,92 @@
             Проверяет, что новый родитель не является самой организацией или её потомком.
             </summary>
         </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.ReadAccessNameIds(FirebirdSql.Data.FirebirdClient.FbConnection,FirebirdSql.Data.FirebirdClient.FbTransaction)">
+            <summary>
+            Возвращает идентификаторы всех существующих категорий доступа (ID_DB = 1).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.ReadOrganizationAccessNames(FirebirdSql.Data.FirebirdClient.FbConnection,FirebirdSql.Data.FirebirdClient.FbTransaction,System.Int32)">
+            <summary>
+            Возвращает идентификаторы категорий доступа, уже привязанных к организации.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.IsLockConflict(FirebirdSql.Data.FirebirdClient.FbException)">
+            <summary>
+            Проверяет, что ошибка — временный конфликт блокировок (deadlock, lock conflict,
+            update conflict). Такие ошибки имеет смысл повторить.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.PersonAccessOperationStatus">
+            <summary>
+            Статус операции с набором категорий доступа сотрудника в API v2.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonAccessOperationStatus.Success">
+            <summary>Операция выполнена.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonAccessOperationStatus.NotFound">
+            <summary>Сотрудник с указанным tabnum не найден.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonAccessOperationStatus.AccessNameNotFound">
+            <summary>Категория доступа отсутствует в ACCESSNAME.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonAccessOperationStatus.DatabaseError">
+            <summary>Ошибка базы данных.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.PersonAccessNamesResult">
+            <summary>
+            Результат чтения набора категорий доступа сотрудника.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.PersonAccessNamesResult.Status">
+            <summary>
+            Статус операции.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.PersonAccessNamesResult.Items">
+            <summary>
+            Идентификаторы категорий доступа (для сохранения — итоговый набор).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.PersonAccessNamesResult.MissingAccessNames">
+            <summary>
+            Категории из запроса, которых нет в ACCESSNAME.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.PersonAccessNamesResult.ErrorMessage">
+            <summary>
+            Текст ошибки базы данных.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.PersonAccessNamesSaveResult">
+            <summary>
+            Результат сохранения набора категорий доступа сотрудника.
+            </summary>
+        </member>
         <member name="T:ArtonitRESTAPI.DBControllers.PersonV2DBController">
             <summary>
             Операции над сотрудником для REST API v2 (идентификация по tabnum).
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonV2DBController.DatabaseId">
+            <summary>
+            Идентификатор базы данных, с которой работает API (ID_DB).
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonV2DBController.ForeignKeyViolationCode">
+            <summary>
+            Код ошибки Firebird «нарушение внешнего ключа».
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonV2DBController.MaxLockRetries">
+            <summary>
+            Сколько раз повторить сохранение набора при временном конфликте блокировок.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.PersonV2DBController.LockRetryDelayMilliseconds">
+            <summary>
+            Пауза между повторами сохранения набора, миллисекунды.
             </summary>
         </member>
         <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.Add(OpenAPIArtonit.Model.PersonV2Post)">
@@ -1055,6 +1312,68 @@
         <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.Delete(System.Int32)">
             <summary>
             Удаляет сотрудника по его id_pep.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.UpdateName(System.Int32,OpenAPIArtonit.Model.PersonV2PutSee)">
+            <summary>
+            Изменяет ФИО сотрудника (SURNAME, NAME, PATRONYMIC) по его id_pep.
+            Пустые имя и отчество допустимы, фамилия обязательна.
+            </summary>
+            <param name="idPep">Внутренний идентификатор сотрудника.</param>
+            <param name="body">Новые значения ФИО.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.GetAccessNames(System.Int32)">
+            <summary>
+            Возвращает набор категорий доступа сотрудника (таблица SS_ACCESSUSER).
+            </summary>
+            <param name="idPep">Внутренний идентификатор сотрудника.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.SaveAccessNames(System.Int32,System.Collections.Generic.IReadOnlyCollection{System.Int32})">
+            <summary>
+            Сохраняет набор категорий доступа сотрудника: недостающие связи
+            добавляются, лишние удаляются. Изменения выполняются одной транзакцией,
+            строка сотрудника блокируется, поэтому параллельные сохранения не
+            пересекаются. Строки SS_ACCESSUSER не обновляются (BEFORE UPDATE
+            trigger SS_ACCESSUSER_BU), а удаляются и вставляются заново.
+            </summary>
+            <param name="idPep">Внутренний идентификатор сотрудника.</param>
+            <param name="accessNames">Полный набор идентификаторов категорий доступа.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.SaveAccessNamesOnce(System.Int32,System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Одна попытка сохранения набора категорий доступа в отдельной транзакции.
+            Конфликты блокировок не перехватывает: их обрабатывает вызывающий метод.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.PersonExists(FirebirdSql.Data.FirebirdClient.FbConnection,System.Int32)">
+            <summary>
+            Существует ли сотрудник с указанным id_pep в базе API.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.ReadAccessNameIds(FirebirdSql.Data.FirebirdClient.FbConnection,FirebirdSql.Data.FirebirdClient.FbTransaction)">
+            <summary>
+            Идентификаторы всех категорий доступа базы API.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.ReadPersonAccessNames(FirebirdSql.Data.FirebirdClient.FbConnection,FirebirdSql.Data.FirebirdClient.FbTransaction,System.Int32)">
+            <summary>
+            Текущий набор категорий доступа сотрудника, по возрастанию.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.IsViolation(FirebirdSql.Data.FirebirdClient.FbException,System.Int32)">
+            <summary>
+            Проверяет, что ошибка вызвана указанным кодом Firebird.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.IsLockConflict(FirebirdSql.Data.FirebirdClient.FbException)">
+            <summary>
+            Проверяет, что ошибка — временный конфликт блокировок (deadlock,
+            lock conflict, update conflict). Такую операцию имеет смысл повторить.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.LogError(System.Exception,System.String)">
+            <summary>
+            Пишет ошибку операции с сотрудником в лог сервиса.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.DBControllers.TabnumLookupState">
@@ -1384,6 +1703,18 @@
         <member name="P:ArtonitRESTAPI.Model.OrganizationPatchSee.DivCode">
             <summary>
             Код организации. Изменять нельзя.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.OrganizationAccessNamesPutSee">
+            <summary>
+            Тело запроса на сохранение набора категорий доступа организации
+            (PUT /api/v2/organizations/{divcode}/accessnames).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationAccessNamesPutSee.AccessNames">
+            <summary>
+            Полный набор идентификаторов категорий доступа (ACCESSNAME.ID_ACCESSNAME).
+            Пустой массив очищает набор; дубликаты игнорируются.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.Model.ApiErrorDetail">

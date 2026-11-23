@@ -57,6 +57,50 @@ namespace ArtonitRESTAPI.APIControllers
     }
 
     /// <summary>
+    /// Валидатор тела запроса на изменение ФИО сотрудника в API v2.
+    /// </summary>
+    public class PersonV2PutSeeValidator : AbstractValidator<PersonV2PutSee>
+    {
+        /// <summary>
+        /// Настраивает правила валидации.
+        /// </summary>
+        public PersonV2PutSeeValidator()
+        {
+            RuleFor(x => x.TabNum)
+                .NotEmpty().WithMessage("Заполнение tabnum обязательно")
+                .MaximumLength(TabnumResolver.MaxLength)
+                .WithMessage($"tabnum не должен превышать {TabnumResolver.MaxLength} символов");
+
+            RuleFor(x => x.Surname)
+                .NotEmpty().WithMessage("Заполнение Surname обязательно")
+                .MaximumLength(50).WithMessage("Surname не должен превышать 50 символов");
+
+            RuleFor(x => x.Name)
+                .MaximumLength(50).WithMessage("Name не должен превышать 50 символов");
+
+            RuleFor(x => x.Patronymic)
+                .MaximumLength(50).WithMessage("Patronymic не должен превышать 50 символов");
+        }
+    }
+
+    /// <summary>
+    /// Валидатор тела запроса на замену набора категорий доступа сотрудника в API v2.
+    /// </summary>
+    public class PersonV2AccessPutSeeValidator : AbstractValidator<PersonV2AccessPutSee>
+    {
+        /// <summary>
+        /// Настраивает правила валидации.
+        /// </summary>
+        public PersonV2AccessPutSeeValidator()
+        {
+            RuleFor(x => x.TabNum)
+                .NotEmpty().WithMessage("Заполнение tabnum обязательно")
+                .MaximumLength(TabnumResolver.MaxLength)
+                .WithMessage($"tabnum не должен превышать {TabnumResolver.MaxLength} символов");
+        }
+    }
+
+    /// <summary>
     /// Валидатор тела запроса на добавление категории доступа сотруднику в API v2.
     /// </summary>
     public class PersonV2AddAccessSeeValidator : AbstractValidator<PersonV2AddAccessSee>
@@ -71,10 +115,12 @@ namespace ArtonitRESTAPI.APIControllers
                 .MaximumLength(TabnumResolver.MaxLength)
                 .WithMessage($"tabnum не должен превышать {TabnumResolver.MaxLength} символов");
 
+            // ID_ACCESSNAME = 0 — существующая системная категория (Check Time),
+            // поэтому отрицательные значения запрещены, а ноль допустим.
             RuleFor(x => x.Id_accessname)
                 .Cascade(CascadeMode.Stop)
                 .NotNull().WithMessage("Заполнение Id_accessname обязательно")
-                .GreaterThan(0).WithMessage("Id_accessname должен быть положительным числом");
+                .GreaterThanOrEqualTo(0).WithMessage("Id_accessname не может быть отрицательным");
         }
     }
 

@@ -155,6 +155,65 @@ namespace OpenAPIArtonit.Model
     }
 
     /// <summary>
+    /// Тело запроса на изменение ФИО сотрудника в REST API v2.
+    /// </summary>
+    public class PersonV2PutSee
+    {
+        /// <summary>
+        /// Табельный номер сотрудника, которого нужно изменить.
+        /// </summary>
+        [DatabaseName("TABNUM")]
+        [JsonPropertyName("tabnum")]
+        [Required(ErrorMessage = "Заполнение tabnum обязательно")]
+        [StringLength(50, ErrorMessage = "tabnum не должен превышать 50 символов")]
+        public string TabNum { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Фамилия. Обязательна: пустая фамилия не сохраняется.
+        /// </summary>
+        [DatabaseName("SURNAME")]
+        [Required(ErrorMessage = "Заполнение Surname обязательно")]
+        [StringLength(50, ErrorMessage = "Surname не должен превышать 50 символов")]
+        public string Surname { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Имя. Может быть пустым.
+        /// </summary>
+        [DatabaseName("NAME")]
+        [StringLength(50, ErrorMessage = "Name не должен превышать 50 символов")]
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Отчество. Может быть пустым.
+        /// </summary>
+        [DatabaseName("PATRONYMIC")]
+        [StringLength(50, ErrorMessage = "Patronymic не должен превышать 50 символов")]
+        public string Patronymic { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Тело запроса на замену набора категорий доступа сотрудника в REST API v2.
+    /// </summary>
+    public class PersonV2AccessPutSee
+    {
+        /// <summary>
+        /// Табельный номер сотрудника.
+        /// </summary>
+        [DatabaseName("TABNUM")]
+        [JsonPropertyName("tabnum")]
+        [Required(ErrorMessage = "Заполнение tabnum обязательно")]
+        [StringLength(50, ErrorMessage = "tabnum не должен превышать 50 символов")]
+        public string TabNum { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Полный набор идентификаторов категорий доступа: поле accessnames.
+        /// Пустой массив очищает набор, отсутствие поля — ошибка.
+        /// </summary>
+        [JsonPropertyName("accessnames")]
+        public List<int>? AccessNames { get; set; }
+    }
+
+    /// <summary>
     /// Тело запроса на добавление категории доступа сотруднику в REST API v2.
     /// </summary>
     public class PersonV2AddAccessSee

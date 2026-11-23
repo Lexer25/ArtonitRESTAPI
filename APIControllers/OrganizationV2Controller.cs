@@ -1,4 +1,4 @@
-﻿using ArtonitRESTAPI.DBControllers;
+using ArtonitRESTAPI.DBControllers;
 using ArtonitRESTAPI.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,12 +21,17 @@ namespace ArtonitRESTAPI.APIControllers
         /// <summary>
         /// Имя политики авторизации для изменяющих команд.
         /// </summary>
-        public const string AdminPolicy = "Admin";
+        public const string AdminPolicy = BaseAPIController.AdminPolicy;
 
         private const int MaxCodeLength = 50;
         private const int MaxNameLength = 50;
         private const int DefaultPageSize = 20;
         private const int MaxPageSize = 100;
+
+        /// <summary>
+        /// Максимальное число категорий доступа в одном запросе сохранения набора.
+        /// </summary>
+        private const int MaxAccessNamesCount = 1000;
 
         private static readonly Regex DivCodeRegex = new Regex(
             @"^[A-Za-z0-9._-]+$",
@@ -150,6 +155,77 @@ namespace ArtonitRESTAPI.APIControllers
             {
                 OrganizationOperationStatus.Success => Ok(result.Items),
                 OrganizationOperationStatus.NotFound => ApiErrorResults.OrganizationNotFound(code),
+                _ => ApiErrorResults.Internal()
+            };
+        }
+
+        /// <summary>
+        /// Сохранить набор категорий доступа организации: полная замена связей в SS_ACCESSORG.
+        /// Недостающие связи добавляются, лишние удаляются; пустой массив очищает набор.
+        /// </summary>
+        /// <param name="divcode">Код организации.</param>
+        /// <param name="body">Полный набор идентификаторов категорий доступа: поле accessnames.</param>
+        [HttpPut("{divcode}/accessnames")]
+        [Authorize(Policy = AdminPolicy)]
+        [JsonBody]
+        [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status422UnprocessableEntity)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+        public IActionResult SaveAccessNames(
+            [FromRoute] string divcode,
+            [FromBody] OrganizationAccessNamesPutSee? body)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ApiErrorResults.FromModelState(ModelState);
+            }
+
+            if (body == null)
+            {
+                return ApiErrorResults.Validation("Тело запроса обязательно");
+            }
+
+            var divCodeError = ValidateDivCode(divcode, out var code);
+            if (divCodeError != null)
+            {
+                return divCodeError;
+            }
+
+            if (body.AccessNames == null)
+            {
+                return ApiErrorResults.Validation(
+                    "accessnames", "required",
+                    "Поле accessnames обязательно: передайте массив идентификаторов категорий доступа или пустой массив");
+            }
+
+            if (body.AccessNames.Count > MaxAccessNamesCount)
+            {
+                return ApiErrorResults.Validation(
+                    "accessnames", "too_long",
+                    $"Поле accessnames не должно содержать больше {MaxAccessNamesCount} идентификаторов");
+            }
+
+            if (body.AccessNames.Any(id => id < 0))
+            {
+                return ApiErrorResults.Validation(
+                    "accessnames", "invalid_value",
+                    "Идентификаторы категорий доступа не могут быть отрицательными");
+            }
+
+            var result = OrganizationDBController.SaveAccessNames(code, body.AccessNames);
+
+            return result.Status switch
+            {
+                OrganizationOperationStatus.Success => Ok(result.Items),
+                OrganizationOperationStatus.NotFound => ApiErrorResults.OrganizationNotFound(code),
+                OrganizationOperationStatus.AccessNameNotFound => ApiErrorResults.AccessNamesNotFound(
+                    result.MissingAccessNames),
+                OrganizationOperationStatus.AccessOrgUnavailable => ApiErrorResults.AccessOrgUnavailable(),
                 _ => ApiErrorResults.Internal()
             };
         }

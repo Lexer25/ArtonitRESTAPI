@@ -53,6 +53,12 @@ namespace ArtonitRESTAPI.DBControllers
         /// <summary>Корневую организацию удалить нельзя.</summary>
         RootOrganization,
 
+        /// <summary>Категория доступа не существует.</summary>
+        AccessNameNotFound,
+
+        /// <summary>В базе отсутствует таблица связей SS_ACCESSORG.</summary>
+        AccessOrgUnavailable,
+
         /// <summary>Ошибка базы данных.</summary>
         DatabaseError
     }
@@ -153,6 +159,24 @@ namespace ArtonitRESTAPI.DBControllers
     }
 
     /// <summary>
+    /// Результат сохранения набора категорий доступа организации.
+    /// </summary>
+    public sealed class OrganizationAccessNamesSaveResult
+    {
+        /// <summary>Состояние операции.</summary>
+        public OrganizationOperationStatus Status { get; set; }
+
+        /// <summary>Сохранённый набор идентификаторов категорий доступа по возрастанию.</summary>
+        public List<int> Items { get; set; } = new List<int>();
+
+        /// <summary>Идентификаторы категорий доступа, которых нет в ACCESSNAME.</summary>
+        public List<int> MissingAccessNames { get; set; } = new List<int>();
+
+        /// <summary>Текст ошибки БД для журнала.</summary>
+        public string? ErrorMessage { get; set; }
+    }
+
+    /// <summary>
     /// Результат создания или изменения организации.
     /// </summary>
     public sealed class OrganizationMutationResult
@@ -210,6 +234,8 @@ namespace ArtonitRESTAPI.DBControllers
         private const int UniqueViolationCode = 335544665;
         private const int ForeignKeyViolationCode = 335544466;
         private const int MaxHierarchyDepth = 10000;
+        private const int MaxLockRetries = 5;
+        private const int LockRetryDelayMilliseconds = 50;
 
         private static readonly Lazy<bool> HasDateCreate = new Lazy<bool>(DetectDateCreateColumn);
 
@@ -430,6 +456,176 @@ namespace ArtonitRESTAPI.DBControllers
                 result.ErrorMessage = ex.Message;
                 return result;
             }
+        }
+
+        /// <summary>
+        /// Сохраняет набор категорий доступа организации: недостающие связи добавляются,
+        /// лишние удаляются. Изменения выполняются одной транзакцией, строка организации
+        /// блокируется, поэтому параллельные сохранения не пересекаются.
+        /// </summary>
+        /// <param name="divCode">Код организации.</param>
+        /// <param name="accessNames">Полный набор идентификаторов категорий доступа.</param>
+        public static OrganizationAccessNamesSaveResult SaveAccessNames(
+            string divCode,
+            IReadOnlyCollection<int> accessNames)
+        {
+            // Набор храним без дубликатов и по возрастанию: дубликаты запрещены
+            // уникальным ограничением UNQ1_SS_ACCESSORG, а порядок нужен для ответа.
+            var requested = accessNames.Distinct().OrderBy(id => id).ToList();
+
+            var result = new OrganizationAccessNamesSaveResult { Items = new List<int>(requested) };
+
+            // Блокировка строки организации в READ COMMITTED работает в режиме no wait:
+            // при одновременных сохранениях Firebird сообщает о конфликте блокировок.
+            // Конфликт кратковременный, поэтому операцию повторяем: последний запрос
+            // применит свой набор целиком.
+            for (var attempt = 1; ; attempt++)
+            {
+                try
+                {
+                    return SaveAccessNamesOnce(divCode, requested);
+                }
+                catch (FbException ex) when (IsLockConflict(ex) && attempt < MaxLockRetries)
+                {
+                    DatabaseService.Logger?.LogWarning(
+                        ex,
+                        "Access set save lock conflict for divcode {DivCode}, attempt {Attempt}",
+                        divCode,
+                        attempt);
+
+                    Thread.Sleep(LockRetryDelayMilliseconds * attempt);
+                }
+                catch (FbException ex)
+                {
+                    LogError(ex);
+
+                    // Категорию удалили между проверкой и вставкой.
+                    if (IsViolation(ex, ForeignKeyViolationCode))
+                    {
+                        result.Status = OrganizationOperationStatus.AccessNameNotFound;
+                        result.ErrorMessage = ex.Message;
+                        return result;
+                    }
+
+                    result.Status = OrganizationOperationStatus.DatabaseError;
+                    result.ErrorMessage = ex.Message;
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex);
+                    result.Status = OrganizationOperationStatus.DatabaseError;
+                    result.ErrorMessage = ex.Message;
+                    return result;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Одна попытка сохранения набора категорий доступа в отдельной транзакции.
+        /// Конфликты блокировок не перехватывает: их обрабатывает вызывающий метод.
+        /// </summary>
+        private static OrganizationAccessNamesSaveResult SaveAccessNamesOnce(
+            string divCode,
+            List<int> requested)
+        {
+            var result = new OrganizationAccessNamesSaveResult { Items = new List<int>(requested) };
+            var requestedSet = new HashSet<int>(requested);
+
+            using var connection = new FbConnection(DatabaseService.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+
+            // 1. Блокируем организацию: проверки и запись SS_ACCESSORG идут в одной транзакции.
+            int idOrg;
+            using (var lockCommand = new FbCommand(
+                       @"SELECT ID_ORG FROM ORGANIZATION
+                         WHERE ID_DB = @idDb AND UPPER(DIVCODE) = UPPER(@divcode) WITH LOCK",
+                       connection,
+                       transaction))
+            {
+                lockCommand.Parameters.AddWithValue("@idDb", DatabaseId);
+                lockCommand.Parameters.AddWithValue("@divcode", divCode.Trim());
+
+                var value = lockCommand.ExecuteScalar();
+                if (value == null || value is DBNull)
+                {
+                    result.Status = OrganizationOperationStatus.NotFound;
+                    return result;
+                }
+
+                idOrg = Convert.ToInt32(value);
+            }
+
+            // В старых базах (шаблон EMPTY.gdb) таблицы связей нет: сохранять некуда.
+            if (!HasAccessOrgTable.Value)
+            {
+                result.Status = OrganizationOperationStatus.AccessOrgUnavailable;
+                return result;
+            }
+
+            // 2. Все категории должны существовать, иначе вставка нарушит FK_SS_ACCESSORG_1.
+            var knownIds = ReadAccessNameIds(connection, transaction);
+            result.MissingAccessNames = requested.Where(id => !knownIds.Contains(id)).ToList();
+            if (result.MissingAccessNames.Count > 0)
+            {
+                result.Status = OrganizationOperationStatus.AccessNameNotFound;
+                return result;
+            }
+
+            // 3. Меняем только отличия от текущего набора: строки SS_ACCESSORG нельзя
+            // обновлять (BEFORE UPDATE trigger SS_ACCESSORG_BU), а удаление и повторная
+            // вставка совпадающих связей без необходимости нагружают базу.
+            var currentIds = ReadOrganizationAccessNames(connection, transaction, idOrg);
+
+            var toRemove = currentIds
+                .Where(id => !requestedSet.Contains(id))
+                .OrderBy(id => id)
+                .ToList();
+            var toAdd = requested.Where(id => !currentIds.Contains(id)).ToList();
+
+            foreach (var idAccessName in toRemove)
+            {
+                using var deleteCommand = new FbCommand(
+                    @"DELETE FROM SS_ACCESSORG
+                      WHERE ID_DB = @idDb AND ID_ORG = @idOrg AND ID_ACCESSNAME = @idAccessName",
+                    connection,
+                    transaction);
+                deleteCommand.Parameters.AddWithValue("@idDb", DatabaseId);
+                deleteCommand.Parameters.AddWithValue("@idOrg", idOrg);
+                deleteCommand.Parameters.AddWithValue("@idAccessName", idAccessName);
+                deleteCommand.ExecuteNonQuery();
+            }
+
+            foreach (var idAccessName in toAdd)
+            {
+                // ID_ACCESSORG назначается генератором; триггер SS_ACCESSORG_CREATE_ID
+                // оставляет переданное значение без изменений.
+                int idAccessOrg;
+                using (var idCommand = new FbCommand(
+                           "SELECT GEN_ID(GEN_SS_ACCESSORG_ID, 1) FROM RDB$DATABASE",
+                           connection,
+                           transaction))
+                {
+                    idAccessOrg = Convert.ToInt32(idCommand.ExecuteScalar());
+                }
+
+                using var insertCommand = new FbCommand(
+                    @"INSERT INTO SS_ACCESSORG (ID_ACCESSORG, ID_DB, ID_ORG, ID_ACCESSNAME)
+                      VALUES (@idAccessOrg, @idDb, @idOrg, @idAccessName)",
+                    connection,
+                    transaction);
+                insertCommand.Parameters.AddWithValue("@idAccessOrg", idAccessOrg);
+                insertCommand.Parameters.AddWithValue("@idDb", DatabaseId);
+                insertCommand.Parameters.AddWithValue("@idOrg", idOrg);
+                insertCommand.Parameters.AddWithValue("@idAccessName", idAccessName);
+                insertCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+
+            result.Status = OrganizationOperationStatus.Success;
+            return result;
         }
 
         /// <summary>
@@ -908,6 +1104,60 @@ namespace ArtonitRESTAPI.DBControllers
             return items;
         }
 
+        /// <summary>
+        /// Возвращает идентификаторы всех существующих категорий доступа (ID_DB = 1).
+        /// </summary>
+        private static HashSet<int> ReadAccessNameIds(FbConnection connection, FbTransaction transaction)
+        {
+            var ids = new HashSet<int>();
+
+            using var command = new FbCommand(
+                "SELECT ID_ACCESSNAME FROM ACCESSNAME WHERE ID_DB = @idDb",
+                connection,
+                transaction);
+            command.Parameters.AddWithValue("@idDb", DatabaseId);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                if (!reader.IsDBNull(0))
+                {
+                    ids.Add(Convert.ToInt32(reader.GetValue(0)));
+                }
+            }
+
+            return ids;
+        }
+
+        /// <summary>
+        /// Возвращает идентификаторы категорий доступа, уже привязанных к организации.
+        /// </summary>
+        private static HashSet<int> ReadOrganizationAccessNames(
+            FbConnection connection,
+            FbTransaction transaction,
+            int idOrg)
+        {
+            var ids = new HashSet<int>();
+
+            using var command = new FbCommand(
+                "SELECT ID_ACCESSNAME FROM SS_ACCESSORG WHERE ID_DB = @idDb AND ID_ORG = @idOrg",
+                connection,
+                transaction);
+            command.Parameters.AddWithValue("@idDb", DatabaseId);
+            command.Parameters.AddWithValue("@idOrg", idOrg);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                if (!reader.IsDBNull(0))
+                {
+                    ids.Add(Convert.ToInt32(reader.GetValue(0)));
+                }
+            }
+
+            return ids;
+        }
+
         private static OrganizationRecord ReadRecord(FbDataReader reader)
         {
             var idParent = reader.GetInt32(1);
@@ -1002,6 +1252,27 @@ namespace ArtonitRESTAPI.DBControllers
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Проверяет, что ошибка — временный конфликт блокировок (deadlock, lock conflict,
+        /// update conflict). Такие ошибки имеет смысл повторить.
+        /// </summary>
+        private static bool IsLockConflict(FbException exception)
+        {
+            // isc_deadlock, isc_lock_conflict, isc_update_conflict.
+            if (IsViolation(exception, 335544336)
+                || IsViolation(exception, 335544345)
+                || IsViolation(exception, 335544359))
+            {
+                return true;
+            }
+
+            var message = exception.Message ?? string.Empty;
+
+            return message.Contains("deadlock", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("lock conflict", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("concurrent update", StringComparison.OrdinalIgnoreCase);
         }
 
         private static void LogError(Exception exception)

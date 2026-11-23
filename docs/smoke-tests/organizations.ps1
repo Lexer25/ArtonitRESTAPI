@@ -217,6 +217,97 @@ Check 'accessnames missing org: NOT_FOUND' ($accessNamesMissing.Json.error -eq '
 $accessNamesBad = Api -Method GET -Path '/api/v2/organizations/%D0%A2/accessnames' -Token $admin
 Check 'accessnames bad divcode: 400' ($accessNamesBad.Status -eq 400) (Show $accessNamesBad.Json)
 
+Write-Host '=== PUT /api/v2/organizations/{divcode}/accessnames ==='
+$cat1 = Api -Method POST -Path '/api/v2/Access' -Json '{"name":"T-ORG-ACCESS-1"}'
+$cat2 = Api -Method POST -Path '/api/v2/Access' -Json '{"name":"T-ORG-ACCESS-2"}'
+Check 'accessnames fixture: categories created' ($cat1.Status -eq 200 -and $cat2.Status -eq 200) ((Show $cat1.Json) + ' / ' + (Show $cat2.Json))
+$id1 = [int]$cat1.Json.id_accessname
+$id2 = [int]$cat2.Json.id_accessname
+$expectedSet = (@($id1, $id2) | Sort-Object) -join ','
+$jsonSet = '{"accessnames":[' + $id2 + ',' + $id1 + ']}'
+
+$save = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json $jsonSet
+Check 'accessnames PUT: 200' ($save.Status -eq 200) (Show $save.Json)
+Check 'accessnames PUT: sorted response' ((@($save.Json) -join ',') -eq $expectedSet) (Show $save.Json)
+
+$savedGet = Api -Method GET -Path '/api/v2/organizations/T-A/accessnames' -Token $admin
+Check 'accessnames PUT: GET returns saved set' ((@($savedGet.Json) -join ',') -eq $expectedSet) (Show $savedGet.Json)
+
+$saveAgain = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json $jsonSet
+Check 'accessnames PUT idempotent: 200' ($saveAgain.Status -eq 200 -and (@($saveAgain.Json) -join ',') -eq $expectedSet) (Show $saveAgain.Json)
+
+$saveDup = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json ('{"accessnames":[' + $id1 + ',' + $id1 + ',' + $id2 + ']}')
+Check 'accessnames PUT duplicates: deduplicated' ($saveDup.Status -eq 200 -and (@($saveDup.Json) -join ',') -eq $expectedSet) (Show $saveDup.Json)
+
+$savePartial = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json ('{"accessnames":[' + $id1 + ']}')
+Check 'accessnames PUT partial: 200' ($savePartial.Status -eq 200) (Show $savePartial.Json)
+Check 'accessnames PUT partial: removed extra link' ((@($savePartial.Json) -join ',') -eq [string]$id1) (Show $savePartial.Json)
+
+$saveRestore = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json $jsonSet
+Check 'accessnames PUT restore: 200' ($saveRestore.Status -eq 200 -and (@($saveRestore.Json) -join ',') -eq $expectedSet) (Show $saveRestore.Json)
+
+$saveUser = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $user -Json $jsonSet
+Check 'accessnames PUT user: 403' ($saveUser.Status -eq 403) (Show $saveUser.Json)
+
+$saveNoToken = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Json $jsonSet
+Check 'accessnames PUT no token: 401' ($saveNoToken.Status -eq 401) (Show $saveNoToken.Json)
+
+$saveMissingOrg = Api -Method PUT -Path '/api/v2/organizations/ORG-999/accessnames' -Token $admin -Json '{"accessnames":[]}'
+Check 'accessnames PUT missing org: 404' ($saveMissingOrg.Status -eq 404) (Show $saveMissingOrg.Json)
+Check 'accessnames PUT missing org: NOT_FOUND' ($saveMissingOrg.Json.error -eq 'NOT_FOUND') (Show $saveMissingOrg.Json)
+
+$saveBadDivcode = Api -Method PUT -Path '/api/v2/organizations/%D0%A2/accessnames' -Token $admin -Json '{"accessnames":[]}'
+Check 'accessnames PUT bad divcode: 400' ($saveBadDivcode.Status -eq 400) (Show $saveBadDivcode.Json)
+
+$saveUnknown = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{"accessnames":[999999]}'
+Check 'accessnames PUT unknown category: 422' ($saveUnknown.Status -eq 422) (Show $saveUnknown.Json)
+Check 'accessnames PUT unknown category: ACCESSNAME_NOT_FOUND' ($saveUnknown.Json.error -eq 'ACCESSNAME_NOT_FOUND') (Show $saveUnknown.Json)
+Check 'accessnames PUT unknown category: detail field' ($saveUnknown.Json.details[0].field -eq 'accessnames') (Show $saveUnknown.Json)
+
+$savedGetAfterError = Api -Method GET -Path '/api/v2/organizations/T-A/accessnames' -Token $admin
+Check 'accessnames PUT error keeps previous set' ((@($savedGetAfterError.Json) -join ',') -eq $expectedSet) (Show $savedGetAfterError.Json)
+
+$saveNoField = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{}'
+Check 'accessnames PUT without field: 400' ($saveNoField.Status -eq 400) (Show $saveNoField.Json)
+Check 'accessnames PUT without field: VALIDATION_ERROR' ($saveNoField.Json.error -eq 'VALIDATION_ERROR') (Show $saveNoField.Json)
+
+$saveNullField = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{"accessnames":null}'
+Check 'accessnames PUT null field: 400' ($saveNullField.Status -eq 400) (Show $saveNullField.Json)
+
+$saveNegative = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{"accessnames":[-1]}'
+Check 'accessnames PUT negative id: 400' ($saveNegative.Status -eq 400) (Show $saveNegative.Json)
+
+$saveBadType = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{"accessnames":["x"]}'
+Check 'accessnames PUT non-integer id: 400' ($saveBadType.Status -eq 400) (Show $saveBadType.Json)
+
+$saveObjectField = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{"accessnames":{"id":1}}'
+Check 'accessnames PUT object field: 400' ($saveObjectField.Status -eq 400) (Show $saveObjectField.Json)
+
+$tooManyIds = (@(1) * 1001) -join ','
+$saveTooMany = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json ('{"accessnames":[' + $tooManyIds + ']}')
+Check 'accessnames PUT 1001 ids: 400' ($saveTooMany.Status -eq 400) (Show $saveTooMany.Json)
+
+$saveArrayBody = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '[1,2]'
+Check 'accessnames PUT array body: 400' ($saveArrayBody.Status -eq 400) (Show $saveArrayBody.Json)
+Check 'accessnames PUT array body: INVALID_JSON' ($saveArrayBody.Json.error -eq 'INVALID_JSON') (Show $saveArrayBody.Json)
+
+$saveEmptyBody = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json ''
+Check 'accessnames PUT empty body: 400' ($saveEmptyBody.Status -eq 400) (Show $saveEmptyBody.Json)
+
+$saveInvalidJson = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{"accessnames":[1,'
+Check 'accessnames PUT invalid json: 400' ($saveInvalidJson.Status -eq 400) (Show $saveInvalidJson.Json)
+Check 'accessnames PUT invalid json: INVALID_JSON' ($saveInvalidJson.Json.error -eq 'INVALID_JSON') (Show $saveInvalidJson.Json)
+
+$saveClear = Api -Method PUT -Path '/api/v2/organizations/T-A/accessnames' -Token $admin -Json '{"accessnames":[]}'
+Check 'accessnames PUT empty set: 200' ($saveClear.Status -eq 200 -and @($saveClear.Json).Count -eq 0) (Show $saveClear.Json)
+
+$clearedGet = Api -Method GET -Path '/api/v2/organizations/T-A/accessnames' -Token $admin
+Check 'accessnames PUT empty set: GET empty' ($clearedGet.Status -eq 200 -and @($clearedGet.Json).Count -eq 0) (Show $clearedGet.Json)
+
+$delCat1 = Api -Method DELETE -Path ('/api/v2/Access/' + $id1)
+$delCat2 = Api -Method DELETE -Path ('/api/v2/Access/' + $id2)
+Check 'accessnames fixture: categories deleted' ($delCat1.Status -eq 200 -and $delCat2.Status -eq 200) ((Show $delCat1.Json) + ' / ' + (Show $delCat2.Json))
+
 Write-Host '=== PUT /api/v2/organizations/{divcode} ==='
 Start-Sleep -Seconds 2
 $idBefore = $get.Json.id

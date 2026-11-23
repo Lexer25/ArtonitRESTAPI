@@ -1,10 +1,16 @@
-﻿using ArtonitRESTAPI.Legasy_Service;
+using ArtonitRESTAPI.Legasy_Service;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtonitRESTAPI.APIControllers
 {
     public class BaseAPIController : ControllerBase
     {
+        /// <summary>
+        /// Имя политики авторизации для изменяющих команд: требуется роль
+        /// администратора.
+        /// </summary>
+        public const string AdminPolicy = "Admin";
+
         //преобразует статус базы данных в статусы HTTP
         protected IActionResult DataBaseStatusToWebStatusCode(DatabaseResult result)
         {

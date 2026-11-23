@@ -66,6 +66,9 @@ DELETE /api/v2/Access/2
   (в базе нет внешнего ключа `ACCESS → ACCESSNAME`, поэтому API делает это явно);
 * связи с сотрудниками в `SS_ACCESSUSER` удаляются каскадно внешним ключом
   `FK_SS_ACCESSUSER_ID_ACCESSNAME`;
+* связи с организациями в `SS_ACCESSORG` тоже удаляются каскадно
+  (`FK_SS_ACCESSORG_1`, `ON DELETE CASCADE`); набор связей организации
+  сохраняется методом `PUT /api/v2/organizations/{divcode}/accessnames`;
 * категорию `id_accessname = 1` («вездеход») удалить нельзя: её защищает
   триггер `ACCESSNAME_BD` и дополнительная проверка API — ответ `409`;
 * если категорию нельзя удалить из-за ограничений базы (например, на неё

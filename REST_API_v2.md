@@ -58,8 +58,11 @@ Swagger разделён на два документа:
 | GET | `/api/v2/Person/GetList?pageIndex=0&pageSize=10` | Список сотрудников (в ответе tabnum) |
 | POST | `/api/v2/Person` | Добавить сотрудника |
 | PATCH | `/api/v2/Person` | Изменить сотрудника, найденного по tabnum |
+| PUT | `/api/v2/Person` | Заменить ФИО сотрудника (с версии 1.6.0) |
 | DELETE | `/api/v2/Person?tabnum=tn_123` | Удалить сотрудника |
 | POST | `/api/v2/Person/AddAccess` | Добавить сотруднику категорию доступа |
+| GET | `/api/v2/Person/Access?tabnum=tn_123` | Набор категорий доступа сотрудника (с версии 1.6.0) |
+| PUT | `/api/v2/Person/Access` | Заменить набор категорий доступа сотрудника (с версии 1.6.0) |
 | POST | `/api/v2/Person/AddIdentifier` | Добавить сотруднику идентификатор |
 | DELETE | `/api/v2/Person/DeleteIdentifier?idCard=...` | Удалить идентификатор по номеру карты |
 | GET | `/api/v2/Identifier/GetList?pageIndex=0&pageSize=10&identifire=` | Список идентификаторов (в ответе tabnum) |
@@ -81,9 +84,11 @@ Swagger разделён на два документа:
 | PATCH | `/api/v2/organizations/{divcode}` | Частично изменить организацию |
 | DELETE | `/api/v2/organizations/{divcode}` | Удалить организацию |
 | GET | `/api/v2/organizations/{divcode}/accessnames` | Список id_accessname категорий доступа организации |
+| PUT | `/api/v2/organizations/{divcode}/accessnames` | Сохранить (полностью заменить) набор категорий доступа организации |
 
 Организации описаны отдельно: [docs/ORGANIZATIONS_API_v2.md](docs/ORGANIZATIONS_API_v2.md).
 Категории доступа описаны отдельно: [docs/ACCESS_API_v2.md](docs/ACCESS_API_v2.md).
+ФИО сотрудника и его набор категорий доступа: [docs/PEOPLE_API_v2.md](docs/PEOPLE_API_v2.md).
 
 ## Примеры
 
@@ -253,14 +258,73 @@ Content-Type: application/json
 DELETE /api/v2/Person?tabnum=T-100
 ```
 
+### Заменить ФИО сотрудника (1.6.0)
+
+```http
+PUT /api/v2/Person
+Content-Type: application/json
+
+{
+  "tabnum": "T-100",
+  "surname": "Петров-Водкин",
+  "name": "Алексей",
+  "patronymic": "Иванович"
+}
+```
+
+Ответ — сохранённые значения:
+
+```json
+{
+  "tabnum": "T-100",
+  "surname": "Петров-Водкин",
+  "name": "Алексей",
+  "patronymic": "Иванович"
+}
+```
+
+Фамилия обязательна, имя и отчество могут быть пустыми. Табельный номер
+неизменяем; организация, карты и категории не затрагиваются.
+
+### Получить набор категорий доступа сотрудника (1.6.0)
+
+```http
+GET /api/v2/Person/Access?tabnum=T-100
+```
+
+Ответ — массив идентификаторов `id_accessname` по возрастанию:
+
+```json
+[0, 1]
+```
+
+### Заменить набор категорий доступа сотрудника (1.6.0)
+
+```http
+PUT /api/v2/Person/Access
+Content-Type: application/json
+
+{
+  "tabnum": "T-100",
+  "accessnames": [0, 1]
+}
+```
+
+Набор заменяется целиком: лишние связи снимаются, недостающие выдаются,
+пустой массив очищает набор. Ответ — итоговый массив `id_accessname`.
+Подробности — в [docs/PEOPLE_API_v2.md](docs/PEOPLE_API_v2.md).
+
 ## Коды ответов
 
 | Код | Когда возвращается |
 |---|---|
 | 200 | Успех |
 | 400 | Ошибка валидации, пустой/слишком длинный tabnum, неверный период дат |
+| 401 | Нет или просрочен токен |
+| 403 | Нет роли администратора для изменяющей команды |
 | 404 | Сотрудник с указанным tabnum не найден |
 | 409 | Дубликат tabnum или несколько сотрудников с одним tabnum |
+| 422 | Категория доступа из набора отсутствует в ACCESSNAME |
 | 500 | Ошибка базы данных или внутренняя ошибка |
 
 ## Совместимость
