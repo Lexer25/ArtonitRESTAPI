@@ -138,6 +138,21 @@ namespace ArtonitRESTAPI.DBControllers
     }
 
     /// <summary>
+    /// Результат выборки категорий доступа организации.
+    /// </summary>
+    public sealed class OrganizationAccessNamesResult
+    {
+        /// <summary>Состояние операции.</summary>
+        public OrganizationOperationStatus Status { get; set; }
+
+        /// <summary>Идентификаторы категорий доступа (ID_ACCESSNAME).</summary>
+        public List<int> Items { get; set; } = new List<int>();
+
+        /// <summary>Текст ошибки БД для журнала.</summary>
+        public string? ErrorMessage { get; set; }
+    }
+
+    /// <summary>
     /// Результат создания или изменения организации.
     /// </summary>
     public sealed class OrganizationMutationResult
@@ -197,6 +212,8 @@ namespace ArtonitRESTAPI.DBControllers
         private const int MaxHierarchyDepth = 10000;
 
         private static readonly Lazy<bool> HasDateCreate = new Lazy<bool>(DetectDateCreateColumn);
+
+        private static readonly Lazy<bool> HasAccessOrgTable = new Lazy<bool>(DetectAccessOrgTable);
 
         /// <summary>
         /// Находит организацию по коду без учёта регистра.
@@ -343,6 +360,75 @@ namespace ArtonitRESTAPI.DBControllers
                     Status = OrganizationOperationStatus.DatabaseError,
                     ErrorMessage = ex.Message
                 };
+            }
+        }
+
+        /// <summary>
+        /// Возвращает идентификаторы категорий доступа, привязанных к организации
+        /// (таблица SS_ACCESSORG), по её коду divcode.
+        /// </summary>
+        /// <param name="divCode">Код организации.</param>
+        public static OrganizationAccessNamesResult GetAccessNames(string divCode)
+        {
+            var result = new OrganizationAccessNamesResult();
+
+            try
+            {
+                using var connection = new FbConnection(DatabaseService.ConnectionString);
+                connection.Open();
+
+                int idOrg;
+                using (var orgCommand = new FbCommand(
+                           "SELECT ID_ORG FROM ORGANIZATION WHERE ID_DB = @idDb AND UPPER(DIVCODE) = UPPER(@divcode) ORDER BY ID_ORG",
+                           connection))
+                {
+                    orgCommand.Parameters.AddWithValue("@idDb", DatabaseId);
+                    orgCommand.Parameters.AddWithValue("@divcode", divCode.Trim());
+
+                    var value = orgCommand.ExecuteScalar();
+                    if (value == null || value is DBNull)
+                    {
+                        result.Status = OrganizationOperationStatus.NotFound;
+                        return result;
+                    }
+
+                    idOrg = Convert.ToInt32(value);
+                }
+
+                // В старых базах (шаблон EMPTY.gdb) таблицы связей может не быть:
+                // тогда связей нет и список пуст.
+                if (!HasAccessOrgTable.Value)
+                {
+                    result.Status = OrganizationOperationStatus.Success;
+                    return result;
+                }
+
+                using var command = new FbCommand(
+                    @"SELECT DISTINCT ID_ACCESSNAME FROM SS_ACCESSORG
+                      WHERE ID_DB = @idDb AND ID_ORG = @idOrg
+                      ORDER BY ID_ACCESSNAME",
+                    connection);
+                command.Parameters.AddWithValue("@idDb", DatabaseId);
+                command.Parameters.AddWithValue("@idOrg", idOrg);
+
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    if (!reader.IsDBNull(0))
+                    {
+                        result.Items.Add(Convert.ToInt32(reader.GetValue(0)));
+                    }
+                }
+
+                result.Status = OrganizationOperationStatus.Success;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex);
+                result.Status = OrganizationOperationStatus.DatabaseError;
+                result.ErrorMessage = ex.Message;
+                return result;
             }
         }
 
@@ -866,6 +952,27 @@ namespace ArtonitRESTAPI.DBControllers
                 using var command = new FbCommand(
                     @"SELECT COUNT(*) FROM RDB$RELATION_FIELDS
                        WHERE RDB$RELATION_NAME = 'ORGANIZATION' AND RDB$FIELD_NAME = 'DATE_CREATE'",
+                    connection);
+
+                return Convert.ToInt32(command.ExecuteScalar()) > 0;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex);
+                return false;
+            }
+        }
+
+        private static bool DetectAccessOrgTable()
+        {
+            try
+            {
+                using var connection = new FbConnection(DatabaseService.ConnectionString);
+                connection.Open();
+
+                using var command = new FbCommand(
+                    @"SELECT COUNT(*) FROM RDB$RELATION_FIELDS
+                       WHERE RDB$RELATION_NAME = 'SS_ACCESSORG'",
                     connection);
 
                 return Convert.ToInt32(command.ExecuteScalar()) > 0;

@@ -1,4 +1,27 @@
 ArtonitRestApi_history.txt
+версия 1.4.0
+23.11.2026
+[+]
+Добавлен метод GET /api/v2/organizations/{divcode}/accessnames — список
+id_accessname категорий доступа, привязанных к указанной организации
+(таблица SS_ACCESSORG). Ответ — JSON-массив целых чисел по возрастанию;
+пустой массив, если связей нет; 404, если организация не найдена.
+Добавлена проверка в docs/smoke-tests/organizations.ps1 и описание
+в docs/ORGANIZATIONS_API_v2.md.
+
+версия 1.3.0
+23.11.2026
+[+]
+Добавлены команды управления категориями доступа /api/v2/Access:
+POST (создание), DELETE /{id_accessname} (удаление), GET /GetList (постраничный
+список с фильтром AccessName) и GET /GetPeople (список tabnum сотрудников
+с указанной категорией по таблице SS_ACCESSUSER).
+Идентификатор категории — ID_ACCESSNAME (таблица ACCESSNAME).
+Удаление категории удаляет её правила доступа (ACCESS); связи с сотрудниками
+(SS_ACCESSUSER) удаляются каскадно. Системную категорию id_accessname=1
+удалить нельзя. Добавлены описание docs/ACCESS_API_v2.md и дымовой тест
+docs/smoke-tests/access.ps1.
+
 версия 1.2.0
 22.11.2026
 [+]

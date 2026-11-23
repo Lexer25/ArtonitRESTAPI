@@ -202,6 +202,21 @@ Check 'GET missing: message' ($missing.Json.message -eq 'Организация 
 $badGet = Api -Method GET -Path '/api/v2/organizations/%D0%A2' -Token $admin
 Check 'GET bad divcode: 400' ($badGet.Status -eq 400) (Show $badGet.Json)
 
+Write-Host '=== GET /api/v2/organizations/{divcode}/accessnames ==='
+$accessNames = Api -Method GET -Path '/api/v2/organizations/T-A/accessnames' -Token $admin
+Check 'accessnames: 200' ($accessNames.Status -eq 200) (Show $accessNames.Json)
+Check 'accessnames: empty for new org' (@($accessNames.Json).Count -eq 0) (Show $accessNames.Json)
+
+$accessNamesUser = Api -Method GET -Path '/api/v2/organizations/T-A/accessnames' -Token $user
+Check 'accessnames: read allowed for user' ($accessNamesUser.Status -eq 200) (Show $accessNamesUser.Json)
+
+$accessNamesMissing = Api -Method GET -Path '/api/v2/organizations/ORG-999/accessnames' -Token $admin
+Check 'accessnames missing org: 404' ($accessNamesMissing.Status -eq 404) (Show $accessNamesMissing.Json)
+Check 'accessnames missing org: NOT_FOUND' ($accessNamesMissing.Json.error -eq 'NOT_FOUND') (Show $accessNamesMissing.Json)
+
+$accessNamesBad = Api -Method GET -Path '/api/v2/organizations/%D0%A2/accessnames' -Token $admin
+Check 'accessnames bad divcode: 400' ($accessNamesBad.Status -eq 400) (Show $accessNamesBad.Json)
+
 Write-Host '=== PUT /api/v2/organizations/{divcode} ==='
 Start-Sleep -Seconds 2
 $idBefore = $get.Json.id
@@ -315,8 +330,16 @@ Check 'list name search empty: 200' ($searchNone.Status -eq 200 -and $searchNone
 
 $sortDesc = Api -Method GET -Path '/api/v2/organizations?sort=-divcode&pageSize=100' -Token $admin
 $codes = @($sortDesc.Json.items | ForEach-Object { $_.divcode })
-$sorted = @($codes | Sort-Object -Descending)
-Check 'list sort -divcode: ordered' (($codes -join '|') -eq ($sorted -join '|')) ($codes -join ',')
+# Сервер сортирует по UPPER(DIVCODE), поэтому порядок проверяется побайтово
+# без учёта регистра, а не культурно-зависимым Sort-Object.
+$ordered = $true
+for ($i = 1; $i -lt $codes.Count; $i++) {
+    if ([string]::Compare($codes[$i - 1].ToUpperInvariant(), $codes[$i].ToUpperInvariant(), [StringComparison]::Ordinal) -lt 0) {
+        $ordered = $false
+        break
+    }
+}
+Check 'list sort -divcode: ordered' $ordered ($codes -join ',')
 
 $page1 = Api -Method GET -Path '/api/v2/organizations?page=1&pageSize=2&sort=divcode' -Token $admin
 $page2 = Api -Method GET -Path '/api/v2/organizations?page=2&pageSize=2&sort=divcode' -Token $admin

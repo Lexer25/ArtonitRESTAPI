@@ -17,6 +17,7 @@
 | 4 | Изменить организацию | `PUT` | `/api/v2/organizations/{divcode}` | 200 | администратор |
 | 5 | Обновить организацию | `PATCH` | `/api/v2/organizations/{divcode}` | 200 | администратор |
 | 6 | Удалить организацию | `DELETE` | `/api/v2/organizations/{divcode}` | 204 | администратор |
+| 7 | Получить категории доступа организации | `GET` | `/api/v2/organizations/{divcode}/accessnames` | 200 | чтение |
 
 `PUT` заменяет все изменяемые поля (`name`, `parent`, `flag`), `PATCH` — только переданные.
 
@@ -230,6 +231,24 @@
 её удаление разрушает ссылки `ID_PARENT = 1` у остальных записей и корень дерева.
 Это ограничение добавлено к перечню ТЗ отдельным кодом `409 ROOT_ORGANIZATION`.
 
+## 7. Получить категории доступа организации — `GET /api/v2/organizations/{divcode}/accessnames`
+
+Возвращает список идентификаторов категорий доступа, привязанных к организации
+в таблице связей `SS_ACCESSORG`.
+
+```json
+[2, 5]
+```
+
+* значения — `id_accessname` из `ACCESSNAME`, по возрастанию, без дубликатов;
+* если связей нет — `200` и пустой массив `[]`;
+* организация не найдена — `404 NOT_FOUND`, некорректный `divcode` — `400 VALIDATION_ERROR`;
+* если в базе отсутствует таблица `SS_ACCESSORG` (старый шаблон `EMPTY.gdb`),
+  связей нет и метод возвращает `[]`.
+
+Метод только читает связи: создание и удаление связей организации с категориями
+доступа выполняется в конфигураторе БД, API эти операции не предоставляет.
+
 ## Коды ответов
 
 | HTTP | `error` | Когда возвращается |
@@ -270,6 +289,7 @@ API работает с одной базой (`ID_DB = 1`), как и оста�
 | `flag` | `FLAG` (`SMALLINT`, по умолчанию `0`) |
 | `updatedAt` | `TIME_STAMP` (обновляется при каждом изменении) |
 | `createdAt` | `DATE_CREATE`, если колонка есть; иначе `TIME_STAMP` |
+| — | `SS_ACCESSORG (ID_ACCESSORG, ID_DB, ID_ORG, ID_ACCESSNAME)` — связи организации с категориями доступа (`ID_ORG` → `ORGANIZATION`, `ID_ACCESSNAME` → `ACCESSNAME`); читаются методом `GET .../{divcode}/accessnames` |
 
 `DIVCODE` уникален без учёта регистра на уровне API. Уникальный индекс
 `UNQ_ORGANIZATION_DIVCODE (DIVCODE, ID_DB)` регистрозависим: Firebird 1.5 не поддерживает
@@ -301,7 +321,7 @@ API работает с одной базой (`ID_DB = 1`), как и оста�
 
 ## Проверка
 
-Дымовой тест контракта (128 проверок) — `docs/smoke-tests/organizations.ps1`:
+Дымовой тест контракта (134 проверки) — `docs/smoke-tests/organizations.ps1`:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File docs\smoke-tests\organizations.ps1 `

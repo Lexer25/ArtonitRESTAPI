@@ -68,6 +68,16 @@
             <param name="idCard"></param>
             <returns></returns>
         </member>
+        <member name="P:OpenAPIArtonit.DB.DatabaseService.ConnectionString">
+            <summary>
+            Строка подключения к базе данных из appsettings.json.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.DB.DatabaseService.Logger">
+            <summary>
+            Логгер сервиса для контроллеров, работающих с Firebird напрямую.
+            </summary>
+        </member>
         <member name="M:OpenAPIArtonit.DB.DatabaseService.GetListParameterized``1(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
             Выполняет параметризованный запрос и возвращает список строк.
@@ -221,17 +231,194 @@
         </member>
         <member name="T:ArtonitRESTAPI.APIControllers.AccessV2Controller">
             <summary>
-            REST API v2 для категорий доступа. Контракт совпадает с v1: id_pep здесь не используется.
+            REST API v2 для категорий доступа. Идентификатор категории — ID_ACCESSNAME
+            (таблица ACCESSNAME). Список сотрудников с категорией строится по SS_ACCESSUSER
+            и возвращает их tabnum.
             </summary>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.AccessV2Controller.GetList(System.Int32,System.Int32,System.String)">
             <summary>
             Получить список категорий доступа.
             </summary>
+            <param name="pageIndex">Номер страницы, начиная с 0.</param>
+            <param name="pageSize">Размер страницы, от 1 до 1000.</param>
+            <param name="AccessName">Подстрока для поиска по названию категории.</param>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.AccessV2Controller.AddAccess(ArtonitRESTAPI.Model.AccessForInsert)">
             <summary>
             Добавить категорию доступа.
+            </summary>
+            <param name="body">Название категории доступа (обязательно, до 50 символов).</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessV2Controller.Delete(System.Int32)">
+            <summary>
+            Удалить категорию доступа по её идентификатору ID_ACCESSNAME.
+            </summary>
+            <param name="id_accessname">Идентификатор категории доступа.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.AccessV2Controller.GetPeople(System.Nullable{System.Int32},System.Int32,System.Int32)">
+            <summary>
+            Получить список сотрудников (их tabnum), которым назначена указанная
+            категория доступа. Источник — таблица SS_ACCESSUSER.
+            </summary>
+            <param name="id_accessname">Идентификатор категории доступа.</param>
+            <param name="pageIndex">Номер страницы, начиная с 0.</param>
+            <param name="pageSize">Размер страницы, от 1 до 1000.</param>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.ApiErrorResults">
+            <summary>
+            Формирует ответы об ошибках в едином формате REST API v2:
+            <c>{ "error": ..., "message": ..., "details": [...] }</c>.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.ValidationError">
+            <summary>Ошибка валидации полей запроса.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.InvalidJsonError">
+            <summary>Тело запроса не разбирается как JSON.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.DivCodeImmutableError">
+            <summary>Попытка изменить divcode.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.EmptyPatchError">
+            <summary>PATCH без изменяемых полей.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.UnauthorizedError">
+            <summary>Токен отсутствует, просрочен или неверен.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.ForbiddenError">
+            <summary>Нет прав администратора.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.NotFoundError">
+            <summary>Организация не найдена.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.DuplicateDivCodeError">
+            <summary>divcode уже существует.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.CycleError">
+            <summary>Ссылка parent образует цикл.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.HasChildrenError">
+            <summary>У организации есть дочерние организации.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.HasPeopleError">
+            <summary>В организации есть активные сотрудники.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.HasChildrenAndPeopleError">
+            <summary>Есть и дочерние организации, и активные сотрудники.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.ParentNotFoundError">
+            <summary>Родительская организация не существует.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.InternalError">
+            <summary>Внутренняя ошибка сервера.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.ApiErrorResults.RootOrganizationError">
+            <summary>Запрет удаления корневой организации.</summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.Create(System.Int32,System.String,System.String,System.Collections.Generic.List{ArtonitRESTAPI.Model.ApiErrorDetail})">
+            <summary>
+            Создаёт ответ с произвольным кодом и телом ошибки.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.Validation(System.String,System.String,System.String)">
+            <summary>
+            400 с кодом VALIDATION_ERROR и одним уточнением.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.Validation(System.String)">
+            <summary>
+            400 с кодом VALIDATION_ERROR без уточнений.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.InvalidJson">
+            <summary>
+            400 INVALID_JSON: тело запроса не разбирается как JSON.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.JsonObjectExpected">
+            <summary>
+            400 INVALID_JSON: JSON должен быть объектом.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.FromModelState(Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary)">
+            <summary>
+            Преобразует ошибки привязки модели в VALIDATION_ERROR с перечнем полей.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.NormalizeFieldName(System.String)">
+            <summary>
+            Приводит ключ ModelState к имени поля JSON (например, «$.flag» → «flag»).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.OrganizationNotFound(System.String)">
+            <summary>
+            404 NOT_FOUND для организации.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.DuplicateDivCode(System.String)">
+            <summary>
+            409 DUPLICATE_DIVCODE.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.DivCodeImmutable">
+            <summary>
+            400 DIVCODE_IMMUTABLE.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.EmptyPatch">
+            <summary>
+            400 EMPTY_PATCH.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.Cycle">
+            <summary>
+            409 CYCLE.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.ParentNotFound(System.String)">
+            <summary>
+            422 PARENT_NOT_FOUND.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.RootOrganizationDelete(System.String)">
+            <summary>
+            409 ROOT_ORGANIZATION: корневую организацию удалить нельзя.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.DeleteConflict(System.String,System.String,System.String,System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.String})">
+            <summary>
+            409 HAS_CHILDREN / HAS_PEOPLE / HAS_CHILDREN_AND_PEOPLE.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.Internal">
+            <summary>
+            500 INTERNAL_ERROR.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.UnauthorizedPayload">
+            <summary>
+            401 UNAUTHORIZED.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.ApiErrorResults.ForbiddenPayload">
+            <summary>
+            403 FORBIDDEN.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.AuthController.RoleClaimType">
+            <summary>
+            Тип утверждения (claim) с ролью пользователя.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.AuthController.AdminRole">
+            <summary>
+            Роль администратора: разрешает изменяющие команды API v2.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.AuthController.UserRole">
+            <summary>
+            Роль обычного пользователя: только чтение.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.APIControllers.EventV2Controller">
@@ -334,6 +521,85 @@
             <summary>
             Удалить идентификатор по номеру карты.
             </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.JsonBodyAttribute">
+            <summary>
+            Проверяет, что тело запроса является корректным JSON-объектом, и запоминает
+            перечень переданных полей: это нужно для PATCH, где отсутствие поля и значение null
+            означают разное. Пустое тело и неразбираемый JSON прерывают выполнение команды
+            ответами VALIDATION_ERROR и INVALID_JSON в едином формате ошибок.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.JsonBodyAttribute.FieldsItemKey">
+            <summary>
+            Ключ в HttpContext.Items, под которым сохраняется набор имён полей JSON.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.JsonBodyAttribute.OnResourceExecutionAsync(Microsoft.AspNetCore.Mvc.Filters.ResourceExecutingContext,Microsoft.AspNetCore.Mvc.Filters.ResourceExecutionDelegate)">
+            <summary>
+            Читает тело запроса до привязки модели, проверяет JSON и возвращает поток в начало.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.APIControllers.OrganizationV2Controller">
+            <summary>
+            REST API v2 для организаций: иерархический справочник подразделений.
+            Все команды требуют заголовок Authorization: Bearer &lt;token&gt;,
+            изменяющие команды дополнительно требуют роль администратора.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.AdminPolicy">
+            <summary>
+            Имя политики авторизации для изменяющих команд.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.GetList(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String)">
+            <summary>
+            Получить список организаций с фильтрацией и пагинацией.
+            </summary>
+            <param name="parent">Код родителя; пустое значение — только корневые организации.</param>
+            <param name="name">Поиск по подстроке в названии без учёта регистра.</param>
+            <param name="page">Номер страницы, начиная с 1. По умолчанию 1.</param>
+            <param name="pageSize">Размер страницы от 1 до 100. По умолчанию 20.</param>
+            <param name="sort">Поле и направление: name, -name, divcode, -divcode, createdAt, -createdAt.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.Get(System.String)">
+            <summary>
+            Получить организацию по коду divcode.
+            </summary>
+            <param name="divcode">Код организации.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.GetAccessNames(System.String)">
+            <summary>
+            Получить список идентификаторов категорий доступа, привязанных к организации.
+            Источник — таблица связей SS_ACCESSORG.
+            </summary>
+            <param name="divcode">Код организации.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.Create(ArtonitRESTAPI.Model.OrganizationPostSee)">
+            <summary>
+            Добавить организацию.
+            </summary>
+            <param name="body">Поля создаваемой организации: divcode, name, parent, flag.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.Replace(System.String,ArtonitRESTAPI.Model.OrganizationPutSee)">
+            <summary>
+            Полностью заменить изменяемые поля организации (name, parent, flag).
+            </summary>
+            <param name="divcode">Код организации.</param>
+            <param name="body">Новые значения полей: name обязателен; отсутствие parent — корень; отсутствие flag — 0.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.Update(System.String,ArtonitRESTAPI.Model.OrganizationPatchSee)">
+            <summary>
+            Изменить только переданные поля организации.
+            </summary>
+            <param name="divcode">Код организации.</param>
+            <param name="body">Поля для изменения: name, parent, flag. Хотя бы одно поле обязательно.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.OrganizationV2Controller.Delete(System.String)">
+            <summary>
+            Удалить организацию, если у неё нет дочерних организаций и активных сотрудников.
+            </summary>
+            <param name="divcode">Код организации.</param>
         </member>
         <member name="T:ArtonitRESTAPI.APIControllers.PersonV2Controller">
             <summary>
@@ -456,6 +722,50 @@
             <param name="accessPointName">Название группы устройств</param>
             <returns></returns>
         </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.AccessDBController">
+            <summary>
+            Операции над категориями доступа (таблицы ACCESSNAME и SS_ACCESSUSER,
+            Firebird 1.5, диалект 3). API работает с одной базой: ID_DB = 1.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.AccessDBController.DatabaseId">
+            <summary>
+            Идентификатор базы данных, с которой работает API (ID_DB).
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.AccessDBController.MaxNameLength">
+            <summary>
+            Максимальная длина названия категории (ACCESSNAME.NAME — VARCHAR(50)).
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.AccessDBController.ProtectedAccessNameId">
+            <summary>
+            Системная категория «вездеход»: удаление запрещено триггером ACCESSNAME_BD.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.AccessDBController.GetAll(System.Int32,System.Int32,System.String)">
+            <summary>
+            Возвращает постраничный список категорий доступа.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.AccessDBController.Add(System.String)">
+            <summary>
+            Добавляет категорию доступа. Идентификатор назначается генератором
+            GEN_ACCESSNAME_ID; название обрезается от пробелов.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.AccessDBController.Delete(System.Int32)">
+            <summary>
+            Удаляет категорию доступа и её правила доступа. Связи с сотрудниками
+            (SS_ACCESSUSER) удаляются каскадно внешним ключом базы данных.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.AccessDBController.GetPeople(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Возвращает постраничный список tabnum сотрудников, которым назначена
+            указанная категория (SS_ACCESSUSER + PEOPLE).
+            </summary>
+        </member>
         <member name="T:ArtonitRESTAPI.DBControllers.EventV2DBController">
             <summary>
             Выборка событий для REST API v2. Запросы параметризованы, сотрудник
@@ -495,6 +805,231 @@
         <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.Add(ArtonitRESTAPI.Model.IdentifierV2PostSee,System.Int32)">
             <summary>
             Добавляет идентификатор сотруднику с указанным id_pep.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationSortField">
+            <summary>
+            Поле сортировки списка организаций.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationSortField.Name">
+            <summary>По названию.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationSortField.DivCode">
+            <summary>По коду организации.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationSortField.CreatedAt">
+            <summary>По дате создания.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus">
+            <summary>
+            Состояние операции над организацией.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.Success">
+            <summary>Операция выполнена.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.NotFound">
+            <summary>Организация не найдена.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.DuplicateDivCode">
+            <summary>divcode уже существует (без учёта регистра).</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.ParentNotFound">
+            <summary>Родительская организация не существует.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.Cycle">
+            <summary>Ссылка parent образует цикл.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.HasChildren">
+            <summary>У организации есть дочерние организации.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.HasPeople">
+            <summary>В организации есть активные сотрудники.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.HasChildrenAndPeople">
+            <summary>Есть и дочерние организации, и активные сотрудники.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.RootOrganization">
+            <summary>Корневую организацию удалить нельзя.</summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationOperationStatus.DatabaseError">
+            <summary>Ошибка базы данных.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationRecord">
+            <summary>
+            Запись таблицы ORGANIZATION в терминах REST API.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.IdOrg">
+            <summary>Идентификатор организации (ID_ORG).</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.IdParent">
+            <summary>Идентификатор родителя (ID_PARENT).</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.DivCode">
+            <summary>Код организации (DIVCODE).</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.Name">
+            <summary>Название организации (NAME).</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.Flag">
+            <summary>Флаг организации (FLAG).</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.ParentDivCode">
+            <summary>Код родительской организации (null для корневых).</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.CreatedAt">
+            <summary>Дата создания.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationRecord.UpdatedAt">
+            <summary>Дата последнего изменения.</summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationRecord.ToApi">
+            <summary>
+            Преобразует запись БД в модель ответа.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationLookupResult">
+            <summary>
+            Результат поиска одной организации.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationLookupResult.Status">
+            <summary>Состояние операции.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationLookupResult.Record">
+            <summary>Найденная запись.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationLookupResult.ErrorMessage">
+            <summary>Текст ошибки БД для журнала.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationListResult">
+            <summary>
+            Результат выборки списка организаций.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationListResult.Status">
+            <summary>Состояние операции.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationListResult.Items">
+            <summary>Записи текущей страницы.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationListResult.Total">
+            <summary>Общее число записей, удовлетворяющих фильтру.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationListResult.ErrorMessage">
+            <summary>Текст ошибки БД для журнала.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesResult">
+            <summary>
+            Результат выборки категорий доступа организации.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesResult.Status">
+            <summary>Состояние операции.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesResult.Items">
+            <summary>Идентификаторы категорий доступа (ID_ACCESSNAME).</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationAccessNamesResult.ErrorMessage">
+            <summary>Текст ошибки БД для журнала.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationMutationResult">
+            <summary>
+            Результат создания или изменения организации.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationMutationResult.Status">
+            <summary>Состояние операции.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationMutationResult.Record">
+            <summary>Актуальная запись организации.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationMutationResult.ParentDivCode">
+            <summary>Код родительской организации, по которому не найдена запись.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationMutationResult.ErrorMessage">
+            <summary>Текст ошибки БД для журнала.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationDeleteResult">
+            <summary>
+            Результат удаления организации.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationDeleteResult.Status">
+            <summary>Состояние операции.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationDeleteResult.DivCode">
+            <summary>Код удаляемой организации.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationDeleteResult.Children">
+            <summary>Коды дочерних организаций.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationDeleteResult.People">
+            <summary>Табельные номера активных сотрудников.</summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.DBControllers.OrganizationDeleteResult.ErrorMessage">
+            <summary>Текст ошибки БД для журнала.</summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.DBControllers.OrganizationDBController">
+            <summary>
+            Операции над организациями поверх таблицы ORGANIZATION (Firebird 1.5, диалект 3).
+            Все изменения выполняются в транзакции; удаление и изменение — под блокировкой строки.
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationDBController.DatabaseId">
+            <summary>
+            Идентификатор базы данных, с которой работает API (ID_DB).
+            </summary>
+        </member>
+        <member name="F:ArtonitRESTAPI.DBControllers.OrganizationDBController.RootOrganizationId">
+            <summary>
+            Идентификатор корневой организации (ID_ORG = 1, DIVCODE = 'dv_All').
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.Find(System.String)">
+            <summary>
+            Находит организацию по коду без учёта регистра.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.GetList(System.Boolean,System.String,System.String,System.Int32,System.Int32,ArtonitRESTAPI.DBControllers.OrganizationSortField,System.Boolean)">
+            <summary>
+            Возвращает постраничный список организаций с фильтрами.
+            </summary>
+            <param name="parentSpecified">Передан ли фильтр по родителю.</param>
+            <param name="parentDivCode">Код родителя; пустая строка — только корневые организации.</param>
+            <param name="nameContains">Подстрока поиска по названию без учёта регистра.</param>
+            <param name="page">Номер страницы, начиная с 1.</param>
+            <param name="pageSize">Размер страницы.</param>
+            <param name="sort">Поле сортировки.</param>
+            <param name="descending">Признак сортировки по убыванию.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.GetAccessNames(System.String)">
+            <summary>
+            Возвращает идентификаторы категорий доступа, привязанных к организации
+            (таблица SS_ACCESSORG), по её коду divcode.
+            </summary>
+            <param name="divCode">Код организации.</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.Create(System.String,System.String,System.String,System.Int32)">
+            <summary>
+            Создаёт организацию в транзакции.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.Update(System.Int32,System.String,System.String,System.Int32)">
+            <summary>
+            Изменяет организацию: name, parent и flag заменяются переданными значениями.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.Delete(System.String)">
+            <summary>
+            Удаляет организацию, если у неё нет дочерних организаций и активных сотрудников.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.OrganizationDBController.WouldCreateCycle(FirebirdSql.Data.FirebirdClient.FbConnection,FirebirdSql.Data.FirebirdClient.FbTransaction,System.Int32,System.Int32)">
+            <summary>
+            Проверяет, что новый родитель не является самой организацией или её потомком.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.DBControllers.PersonV2DBController">
@@ -612,6 +1147,31 @@
             Название категории доступа
             </summary>
         </member>
+        <member name="T:ArtonitRESTAPI.Model.AccessCategory">
+            <summary>
+            Категория доступа в ответах на добавление и удаление.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessCategory.Id_accessname">
+            <summary>
+            Идентификатор категории доступа (ACCESSNAME.ID_ACCESSNAME).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessCategory.Name">
+            <summary>
+            Название категории доступа.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.AccessPerson">
+            <summary>
+            Сотрудник, которому назначена категория доступа. В ответе передаётся только tabnum.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.AccessPerson.TabNum">
+            <summary>
+            Табельный номер сотрудника (PEOPLE.TABNUM).
+            </summary>
+        </member>
         <member name="T:ArtonitRESTAPI.Model.EventV2Response">
             <summary>
             Событие в REST API v2: сотрудник представлен табельным номером tabnum.
@@ -683,6 +1243,222 @@
         <member name="P:ArtonitRESTAPI.Model.IdentifierV2PostSee.Id_cardtype">
             <summary>
             Идентификатор типа карты.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.OrganizationGet">
+            <summary>
+            Организация в ответах REST API v2.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationGet.Id">
+            <summary>
+            Внутренний идентификатор записи (ID_ORG).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationGet.DivCode">
+            <summary>
+            Уникальный код организации (DIVCODE).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationGet.Name">
+            <summary>
+            Название организации.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationGet.Parent">
+            <summary>
+            Код родительской организации; null — организация корневая.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationGet.Flag">
+            <summary>
+            Флаг организации: 0 — обычная, 1 — гостевая.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationGet.CreatedAt">
+            <summary>
+            Дата создания (ISO 8601, UTC). null — в базе нет отметки времени.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationGet.UpdatedAt">
+            <summary>
+            Дата последнего изменения (ISO 8601, UTC). null — в базе нет отметки времени.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.OrganizationListResponse">
+            <summary>
+            Постраничный список организаций.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationListResponse.Items">
+            <summary>
+            Организации текущей страницы.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationListResponse.Page">
+            <summary>
+            Номер страницы, начиная с 1.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationListResponse.PageSize">
+            <summary>
+            Размер страницы.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationListResponse.Total">
+            <summary>
+            Общее число записей, удовлетворяющих фильтру.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.OrganizationPostSee">
+            <summary>
+            Тело запроса на создание организации (POST /api/v2/organizations).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPostSee.DivCode">
+            <summary>
+            Уникальный код организации: 1–50 символов, латиница, цифры, «-», «_», «.».
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPostSee.Name">
+            <summary>
+            Название организации: 1–50 символов после обрезки пробелов.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPostSee.Parent">
+            <summary>
+            Код родительской организации; null или отсутствие поля — корневая организация.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPostSee.Flag">
+            <summary>
+            Флаг организации: 0 — обычная, 1 — гостевая. По умолчанию 0.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.OrganizationPutSee">
+            <summary>
+            Тело запроса на полную замену изменяемых полей организации (PUT /api/v2/organizations/{divcode}).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPutSee.Name">
+            <summary>
+            Название организации: 1–50 символов после обрезки пробелов.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPutSee.Parent">
+            <summary>
+            Код родительской организации; отсутствие поля или null — организация становится корневой.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPutSee.Flag">
+            <summary>
+            Флаг организации: 0 — обычная, 1 — гостевая. Отсутствие поля — 0.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPutSee.DivCode">
+            <summary>
+            Код организации. Передавать не требуется; если передан, должен совпадать с путём.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.OrganizationPatchSee">
+            <summary>
+            Тело запроса на частичное изменение организации (PATCH /api/v2/organizations/{divcode}).
+            Отсутствие поля означает «не изменять», значение null для parent — «переместить в корень».
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPatchSee.Name">
+            <summary>
+            Новое название организации. Не может быть пустым или null.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPatchSee.Parent">
+            <summary>
+            Новый код родительской организации; null — переместить в корень.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPatchSee.Flag">
+            <summary>
+            Новый флаг организации: 0 или 1. Не может быть null.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationPatchSee.DivCode">
+            <summary>
+            Код организации. Изменять нельзя.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.ApiErrorDetail">
+            <summary>
+            Уточнение к ошибке валидации.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.ApiErrorDetail.Field">
+            <summary>
+            Имя поля запроса.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.ApiErrorDetail.Issue">
+            <summary>
+            Машиночитаемая причина: required, invalid_format, too_long, invalid_value и т. п.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.ApiError">
+            <summary>
+            Единый формат ошибки REST API v2.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.ApiError.Error">
+            <summary>
+            Машиночитаемый код в UPPER_SNAKE_CASE.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.ApiError.Message">
+            <summary>
+            Описание ошибки для человека на русском языке.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.ApiError.Details">
+            <summary>
+            Необязательный массив уточнений по полям запроса.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.OrganizationDeleteConflict">
+            <summary>
+            Ответ 409 при удалении организации, у которой есть дочерние организации или активные сотрудники.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationDeleteConflict.Error">
+            <summary>
+            Машиночитаемый код: HAS_CHILDREN, HAS_PEOPLE или HAS_CHILDREN_AND_PEOPLE.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationDeleteConflict.Message">
+            <summary>
+            Описание причины отказа.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationDeleteConflict.DivCode">
+            <summary>
+            Код организации, которую пытались удалить.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationDeleteConflict.ChildrenCount">
+            <summary>
+            Количество дочерних организаций.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationDeleteConflict.Children">
+            <summary>
+            Коды дочерних организаций.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationDeleteConflict.PeopleCount">
+            <summary>
+            Количество активных сотрудников.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.OrganizationDeleteConflict.People">
+            <summary>
+            Табельные номера активных сотрудников.
             </summary>
         </member>
     </members>

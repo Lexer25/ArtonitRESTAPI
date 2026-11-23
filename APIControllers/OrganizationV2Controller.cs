@@ -126,6 +126,35 @@ namespace ArtonitRESTAPI.APIControllers
         }
 
         /// <summary>
+        /// Получить список идентификаторов категорий доступа, привязанных к организации.
+        /// Источник — таблица связей SS_ACCESSORG.
+        /// </summary>
+        /// <param name="divcode">Код организации.</param>
+        [HttpGet("{divcode}/accessnames")]
+        [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+        public IActionResult GetAccessNames([FromRoute] string divcode)
+        {
+            var divCodeError = ValidateDivCode(divcode, out var code);
+            if (divCodeError != null)
+            {
+                return divCodeError;
+            }
+
+            var result = OrganizationDBController.GetAccessNames(code);
+
+            return result.Status switch
+            {
+                OrganizationOperationStatus.Success => Ok(result.Items),
+                OrganizationOperationStatus.NotFound => ApiErrorResults.OrganizationNotFound(code),
+                _ => ApiErrorResults.Internal()
+            };
+        }
+
+        /// <summary>
         /// Добавить организацию.
         /// </summary>
         /// <param name="body">Поля создаваемой организации: divcode, name, parent, flag.</param>

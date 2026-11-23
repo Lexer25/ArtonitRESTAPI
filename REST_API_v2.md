@@ -68,6 +68,8 @@ Swagger разделён на два документа:
 | GET | `/api/v2/IdentifierType/GetList` | Список типов идентификаторов |
 | GET | `/api/v2/Access/GetList` | Список категорий доступа |
 | POST | `/api/v2/Access` | Добавить категорию доступа |
+| DELETE | `/api/v2/Access/{id_accessname}` | Удалить категорию доступа |
+| GET | `/api/v2/Access/GetPeople?id_accessname=1` | Сотрудники с категорией доступа (tabnum) |
 | GET | `/api/v2/Event/passIdDg` | События сотрудника по группе устройств |
 | GET | `/api/v2/Event/passIdAp` | События сотрудника по точке прохода |
 | GET | `/api/v2/Event/passAllDG` | Все события по группе устройств |
@@ -78,8 +80,10 @@ Swagger разделён на два документа:
 | PUT | `/api/v2/organizations/{divcode}` | Полностью заменить изменяемые поля организации |
 | PATCH | `/api/v2/organizations/{divcode}` | Частично изменить организацию |
 | DELETE | `/api/v2/organizations/{divcode}` | Удалить организацию |
+| GET | `/api/v2/organizations/{divcode}/accessnames` | Список id_accessname категорий доступа организации |
 
 Организации описаны отдельно: [docs/ORGANIZATIONS_API_v2.md](docs/ORGANIZATIONS_API_v2.md).
+Категории доступа описаны отдельно: [docs/ACCESS_API_v2.md](docs/ACCESS_API_v2.md).
 
 ## Примеры
 
@@ -155,6 +159,60 @@ Content-Type: application/json
   "id_card": "A1B2C3D4",
   "tabnum": "T-100",
   "id_cardtype": 1
+}
+```
+
+### Добавить категорию доступа
+
+```http
+POST /api/v2/Access
+Content-Type: application/json
+
+{
+  "name": "Тестовая категория"
+}
+```
+
+Ответ:
+
+```json
+{
+  "id_accessname": 2,
+  "name": "Тестовая категория"
+}
+```
+
+### Удалить категорию доступа
+
+```http
+DELETE /api/v2/Access/2
+```
+
+Ответ:
+
+```json
+{
+  "id_accessname": 2,
+  "name": "Тестовая категория"
+}
+```
+
+### Получить сотрудников с категорией доступа
+
+```http
+GET /api/v2/Access/GetPeople?id_accessname=1&pageIndex=0&pageSize=10
+```
+
+Ответ (в `context` только `tabnum`):
+
+```json
+{
+  "context": [
+    { "tabnum": "tn_SysAdmin" }
+  ],
+  "pageIndex": 0,
+  "pageSize": 10,
+  "pageCount": 1
 }
 ```
 

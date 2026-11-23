@@ -65,9 +65,21 @@ namespace ArtonitRESTAPI.APIControllers
             _logger.LogInformation("Начало добавления права доступа");
             try
             {
-                var result = DataBaseStatusToWebStatusCode(AccessDBController.Add(new AccessForInsert(body)));
+                if (body == null || string.IsNullOrWhiteSpace(body.Name))
+                {
+                    return BadRequest("Название категории доступа обязательно");
+                }
+
+                var result = AccessDBController.Add(body.Name);
+                if (result.State == State.Successes)
+                {
+                    // v1 возвращал количество вставленных строк; сохраняем контракт.
+                    result.Value = 1;
+                }
+
+                var response = DataBaseStatusToWebStatusCode(result);
                 _logger.LogInformation("Право доступа успешно добавлено");
-                return result;
+                return response;
             }
             catch (Exception ex)
             {

@@ -32,6 +32,18 @@ REST API v2:
 Для базы данных подготовлены миграции в docs/migrations (уникальный индекс DIVCODE
 и необязательная колонка DATE_CREATE). Дымовой тест API — docs/smoke-tests/organizations.ps1.
 
+Управление категориями доступа (версия 1.3.0):
+Команды /api/v2/Access: добавление категории, удаление по ID_ACCESSNAME, постраничный
+список категорий и список сотрудников (tabnum) с указанной категорией. Категории хранятся
+в ACCESSNAME, связи с сотрудниками — в SS_ACCESSUSER. Полное описание и примеры —
+в файле docs/ACCESS_API_v2.md, дымовой тест — docs/smoke-tests/access.ps1.
+
+Связи организаций с категориями доступа (версия 1.4.0):
+Метод GET /api/v2/organizations/{divcode}/accessnames возвращает список id_accessname,
+привязанных к организации в таблице SS_ACCESSORG. Ответ — JSON-массив целых чисел
+по возрастанию; если организация не найдена — 404, если связей нет — пустой массив.
+Описание — в docs/ORGANIZATIONS_API_v2.md.
+
 Swagger разделён на два документа:
 - v1: http://localhost:5056/swagger/v1/swagger.json
 - v2: http://localhost:5056/swagger/v2/swagger.json

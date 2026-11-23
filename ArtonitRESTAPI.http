@@ -60,6 +60,11 @@ GET {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations/ORG-001
 Authorization: Bearer {{token}}
 Accept: application/json
 
+### Категории доступа организации (список id_accessname)
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations/ORG-001/accessnames
+Authorization: Bearer {{token}}
+Accept: application/json
+
 ### Добавить организацию
 POST {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations
 Authorization: Bearer {{token}}
@@ -95,3 +100,22 @@ Content-Type: application/json
 ### Удалить организацию
 DELETE {{ArtonitRESTAPI_HostAddress}}/api/v2/organizations/ORG-001
 Authorization: Bearer {{token}}
+
+### Список категорий доступа
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Access/GetList?pageIndex=0&pageSize=10
+Accept: application/json
+
+### Добавить категорию доступа
+POST {{ArtonitRESTAPI_HostAddress}}/api/v2/Access
+Content-Type: application/json
+
+{
+  "name": "Тестовая категория"
+}
+
+### Сотрудники с категорией доступа (в ответе tabnum)
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Access/GetPeople?id_accessname=2&pageIndex=0&pageSize=10
+Accept: application/json
+
+### Удалить категорию доступа
+DELETE {{ArtonitRESTAPI_HostAddress}}/api/v2/Access/2

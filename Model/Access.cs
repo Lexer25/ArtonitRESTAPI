@@ -1,5 +1,6 @@
-﻿using OpenAPIArtonit.Anotation;
+using OpenAPIArtonit.Anotation;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Text.Json.Serialization;
 
 namespace ArtonitRESTAPI.Model
 {
@@ -18,7 +19,7 @@ namespace ArtonitRESTAPI.Model
         /// </summary>
         [DatabaseName("NAME")]
         [SwaggerSchema("Название категории доступа")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
 
 
@@ -33,15 +34,14 @@ namespace ArtonitRESTAPI.Model
         /// Название категории доступа
         /// </summary>
         [DatabaseName("NAME")]
-        public string Name { get; set; }
+        [SwaggerSchema("Название категории доступа")]
+        public string Name { get; set; } = string.Empty;
         public AccessForInsert() { }
         public AccessForInsert(AccessForInsert body)
         {
             this.Name = body.Name;
         }
     }
-
-
 
 
     public class AccessList : AccessBase
@@ -56,5 +56,35 @@ namespace ArtonitRESTAPI.Model
 
     }
 
+    /// <summary>
+    /// Категория доступа в ответах на добавление и удаление.
+    /// </summary>
+    public class AccessCategory
+    {
+        /// <summary>
+        /// Идентификатор категории доступа (ACCESSNAME.ID_ACCESSNAME).
+        /// </summary>
+        [JsonPropertyName("id_accessname")]
+        public int Id_accessname { get; set; }
+
+        /// <summary>
+        /// Название категории доступа.
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Сотрудник, которому назначена категория доступа. В ответе передаётся только tabnum.
+    /// </summary>
+    public class AccessPerson
+    {
+        /// <summary>
+        /// Табельный номер сотрудника (PEOPLE.TABNUM).
+        /// </summary>
+        [DatabaseName("TABNUM")]
+        [JsonPropertyName("tabnum")]
+        public string TabNum { get; set; } = string.Empty;
+    }
 
 }
