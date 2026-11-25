@@ -1,4 +1,28 @@
 ArtonitRestApi_history.txt
+версия 1.8.0
+25.11.2026
+[+]
+Добавлен метод GET /api/v2/Identifier/GetCount — статистика по таблице CARD:
+{"total","active","inactive"} после применения фильтров tabnum, timestart,
+timeend, active, id_cardtype и createdat. Метод GET /api/v2/Identifier/GetList
+получил те же необязательные фильтры и прежний identifire; в элементы ответа
+добавлены timestart, timeend, active и createdat. Для timestart/timeend/createdat
+дата без времени означает весь день, дата-время — точное совпадение. Обновлены
+docs/IDENTIFIERS_API_v2.md, REST_API_v2.md, README.md и ArtonitRESTAPI.http;
+добавлен дымовой тест docs/smoke-tests/identifiers-stats.ps1.
+
+версия 1.7.0
+25.11.2026
+[+]
+Добавлен метод GET /api/v2/Person/GetCount — статистика по таблице PEOPLE:
+{"total","active","inactive"} — всего записей, записей с ACTIVE=1 и ACTIVE=0.
+Метод GET /api/v2/Person/GetList получил необязательный параметр active:
+all/пусто — все записи, 1/true/active — ACTIVE=1, 0/false/inactive — ACTIVE=0,
+неверное значение — 400 VALIDATION_ERROR. Пагинация и структура ответа не изменились,
+pageCount считается после фильтра. Список упорядочен по ID_PEP.
+Обновлены docs/PEOPLE_API_v2.md, REST_API_v2.md, README.md и ArtonitRESTAPI.http;
+добавлен дымовой тест docs/smoke-tests/people-stats.ps1.
+
 версия 1.5.0
 23.11.2026
 [+]

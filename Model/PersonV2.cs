@@ -36,6 +36,33 @@ namespace OpenAPIArtonit.Model
     }
 
     /// <summary>
+    /// Статистика по таблице PEOPLE: всего сотрудников, активных и неактивных.
+    /// </summary>
+    public class PersonV2Count
+    {
+        /// <summary>
+        /// Количество всех записей в таблице PEOPLE.
+        /// </summary>
+        [DatabaseName("TOTAL_COUNT")]
+        [JsonPropertyName("total")]
+        public int Total { get; set; }
+
+        /// <summary>
+        /// Количество записей с ACTIVE = 1.
+        /// </summary>
+        [DatabaseName("ACTIVE_COUNT")]
+        [JsonPropertyName("active")]
+        public int Active { get; set; }
+
+        /// <summary>
+        /// Количество записей с ACTIVE = 0.
+        /// </summary>
+        [DatabaseName("INACTIVE_COUNT")]
+        [JsonPropertyName("inactive")]
+        public int Inactive { get; set; }
+    }
+
+    /// <summary>
     /// Тело запроса на добавление сотрудника в REST API v2.
     /// </summary>
     public class PersonV2PostSee

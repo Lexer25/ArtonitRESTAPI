@@ -55,7 +55,8 @@ Swagger разделён на два документа:
 | Метод | Маршрут v2 | Назначение |
 |---|---|---|
 | GET | `/api/v2/Person?tabnum=tn_123` | Получить сотрудника по tabnum |
-| GET | `/api/v2/Person/GetList?pageIndex=0&pageSize=10` | Список сотрудников (в ответе tabnum) |
+| GET | `/api/v2/Person/GetList?pageIndex=0&pageSize=10&active=` | Список сотрудников (в ответе tabnum); `active` фильтрует по `ACTIVE` (с версии 1.7.0) |
+| GET | `/api/v2/Person/GetCount` | Количество всех, активных и неактивных сотрудников (с версии 1.7.0) |
 | POST | `/api/v2/Person` | Добавить сотрудника |
 | PATCH | `/api/v2/Person` | Изменить сотрудника, найденного по tabnum |
 | PUT | `/api/v2/Person` | Заменить ФИО сотрудника (с версии 1.6.0) |
@@ -65,7 +66,8 @@ Swagger разделён на два документа:
 | PUT | `/api/v2/Person/Access` | Заменить набор категорий доступа сотрудника (с версии 1.6.0) |
 | POST | `/api/v2/Person/AddIdentifier` | Добавить сотруднику идентификатор |
 | DELETE | `/api/v2/Person/DeleteIdentifier?idCard=...` | Удалить идентификатор по номеру карты |
-| GET | `/api/v2/Identifier/GetList?pageIndex=0&pageSize=10&identifire=` | Список идентификаторов (в ответе tabnum) |
+| GET | `/api/v2/Identifier/GetCount` | Количество записей `CARD` по фильтрам (всего/активных/неактивных, с версии 1.8.0) |
+| GET | `/api/v2/Identifier/GetList?pageIndex=0&pageSize=10&identifire=` | Список идентификаторов по фильтрам (в ответе tabnum, с версии 1.8.0) |
 | POST | `/api/v2/Identifier` | Добавить идентификатор сотруднику |
 | DELETE | `/api/v2/Identifier/DeleteIdentifier?idCard=...` | Удалить идентификатор |
 | GET | `/api/v2/IdentifierType/GetList` | Список типов идентификаторов |
@@ -89,6 +91,7 @@ Swagger разделён на два документа:
 Организации описаны отдельно: [docs/ORGANIZATIONS_API_v2.md](docs/ORGANIZATIONS_API_v2.md).
 Категории доступа описаны отдельно: [docs/ACCESS_API_v2.md](docs/ACCESS_API_v2.md).
 ФИО сотрудника и его набор категорий доступа: [docs/PEOPLE_API_v2.md](docs/PEOPLE_API_v2.md).
+Идентификаторы, статистика и фильтры по таблице CARD: [docs/IDENTIFIERS_API_v2.md](docs/IDENTIFIERS_API_v2.md).
 
 ## Примеры
 
@@ -154,6 +157,36 @@ GET /api/v2/Person?tabnum=T-100
 ]
 ```
 
+### Получить статистику по сотрудникам (1.7.0)
+
+```http
+GET /api/v2/Person/GetCount
+```
+
+Ответ:
+
+```json
+{
+  "total": 79,
+  "active": 79,
+  "inactive": 0
+}
+```
+
+`total` — все записи `PEOPLE`, `active` — записи с `ACTIVE = 1`,
+`inactive` — записи с `ACTIVE = 0`.
+
+### Получить только активных или только неактивных сотрудников (1.7.0)
+
+```http
+GET /api/v2/Person/GetList?pageIndex=0&pageSize=10&active=1
+GET /api/v2/Person/GetList?pageIndex=0&pageSize=10&active=0
+```
+
+`active` принимает `1`/`true`/`active` (только `ACTIVE = 1`),
+`0`/`false`/`inactive` (только `ACTIVE = 0`) и `all`/пусто (все записи).
+Структура ответа не изменилась: `context`, `pageIndex`, `pageSize`, `pageCount`.
+
 ### Добавить идентификатор
 
 ```http
@@ -166,6 +199,35 @@ Content-Type: application/json
   "id_cardtype": 1
 }
 ```
+
+### Получить статистику по идентификаторам (1.8.0)
+
+```http
+GET /api/v2/Identifier/GetCount?id_cardtype=1&active=1
+```
+
+```json
+{
+  "total": 12,
+  "active": 10,
+  "inactive": 2
+}
+```
+
+`total` — все записи `CARD` после фильтров, `active` — из них с
+`ACTIVE = 1`, `inactive` — с `ACTIVE = 0`.
+
+### Получить список идентификаторов с фильтрами (1.8.0)
+
+```http
+GET /api/v2/Identifier/GetList?pageIndex=0&pageSize=10&tabnum=T-100&id_cardtype=1&active=1
+```
+
+Поддерживаются фильтры `tabnum`, `timestart`, `timeend`, `active`,
+`id_cardtype`, `createdat` и прежний `identifire` (номер карты).
+Если передана только дата, фильтр по `timestart`/`timeend`/`createdat`
+охватывает весь день; дата-время сравнивается точно. Подробности и примеры —
+в [docs/IDENTIFIERS_API_v2.md](docs/IDENTIFIERS_API_v2.md).
 
 ### Добавить категорию доступа
 
@@ -332,3 +394,9 @@ Content-Type: application/json
 * v1 продолжает работать по прежним адресам и по-прежнему использует `id_pep`.
 * В ответах v2 поле `id_pep` не возвращается.
 * В событиях v2 вместо `ess1` (id_pep) возвращается `tabnum`.
+* С версии 1.7.0 `GET /api/v2/Person/GetList` без `active` работает как раньше,
+  а `GET /api/v2/Person/GetCount` возвращает статистику по `PEOPLE.ACTIVE`.
+* С версии 1.8.0 `GET /api/v2/Identifier/GetList` без новых фильтров работает
+  как раньше, а `GET /api/v2/Identifier/GetCount` возвращает статистику по
+  `CARD`; в элементах списка добавлены `timestart`, `timeend`, `active` и
+  `createdat`.

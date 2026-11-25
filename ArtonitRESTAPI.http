@@ -8,6 +8,18 @@ Accept: application/json
 GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Person/GetList?pageIndex=0&pageSize=10
 Accept: application/json
 
+### Статистика по сотрудникам: всего, активные, неактивные
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Person/GetCount
+Accept: application/json
+
+### Список только активных сотрудников (ACTIVE=1)
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Person/GetList?pageIndex=0&pageSize=10&active=1
+Accept: application/json
+
+### Список только неактивных сотрудников (ACTIVE=0)
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Person/GetList?pageIndex=0&pageSize=10&active=0
+Accept: application/json
+
 ### Добавить сотрудника без tabnum (tabnum сформируется как tn_<id_pep>)
 POST {{ArtonitRESTAPI_HostAddress}}/api/v2/Person
 Content-Type: application/json
@@ -38,6 +50,26 @@ Content-Type: application/json
   "tabnum": "T-100",
   "id_cardtype": 1
 }
+
+### Статистика по идентификаторам: всего, активные, неактивные (фильтры необязательны)
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Identifier/GetCount
+Accept: application/json
+
+### Статистика по активным идентификаторам типа 1
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Identifier/GetCount?id_cardtype=1&active=1
+Accept: application/json
+
+### Список идентификаторов с фильтрами: сотрудник, тип, активность
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Identifier/GetList?pageIndex=0&pageSize=10&tabnum=T-100&id_cardtype=1&active=1
+Accept: application/json
+
+### Список идентификаторов, созданных 20.11.2026 (дата без времени — весь день)
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Identifier/GetList?createdat=2026-11-20
+Accept: application/json
+
+### Список идентификаторов с точным TIMEEND
+GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Identifier/GetList?timeend=2026-12-31%2023:59:59
+Accept: application/json
 
 ### События сотрудника по группе устройств
 GET {{ArtonitRESTAPI_HostAddress}}/api/v2/Event/passIdDg?tabnum=T-100&fromDate=2026-01-01%2000:00:00&toDate=2026-12-31%2023:59:59&deviceGroupName=Все%20устройства

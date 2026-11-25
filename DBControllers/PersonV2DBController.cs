@@ -246,6 +246,60 @@ namespace ArtonitRESTAPI.DBControllers
         }
 
         /// <summary>
+        /// Возвращает статистику по таблице PEOPLE: всего, активных (ACTIVE = 1)
+        /// и неактивных (ACTIVE = 0) сотрудников.
+        /// </summary>
+        public static DatabaseResult GetCount()
+        {
+            const string query = @"
+                SELECT
+                    COUNT(*) AS TOTAL_COUNT,
+                    COALESCE(SUM(CASE WHEN p.""ACTIVE"" = 1 THEN 1 ELSE 0 END), 0) AS ACTIVE_COUNT,
+                    COALESCE(SUM(CASE WHEN p.""ACTIVE"" = 0 THEN 1 ELSE 0 END), 0) AS INACTIVE_COUNT
+                FROM PEOPLE p";
+
+            return DatabaseService.Get<PersonV2Count>(query);
+        }
+
+        /// <summary>
+        /// Возвращает страницу сотрудников. Фильтр <paramref name="active"/>:
+        /// null — все записи, true — ACTIVE = 1, false — ACTIVE = 0.
+        /// </summary>
+        /// <param name="pageIndex">Номер страницы, начиная с 0.</param>
+        /// <param name="pageSize">Размер страницы.</param>
+        /// <param name="active">Фильтр по признаку активности или null для всех записей.</param>
+        public static Tuple<DatabaseResult, int> GetList(int pageIndex, int pageSize, bool? active)
+        {
+            var filter = active.HasValue ? " WHERE p.\"ACTIVE\" = @active" : string.Empty;
+
+            var parameters = new Dictionary<string, object>();
+            if (active.HasValue)
+            {
+                parameters["@active"] = active.Value ? 1 : 0;
+            }
+
+            // long защищает от переполнения int при большом pageIndex.
+            var skip = (long)pageIndex * pageSize;
+
+            var queryList = $@"
+                SELECT FIRST {pageSize} SKIP {skip}
+                    p.ID_PEP, p.SURNAME, p.NAME, p.PATRONYMIC, p.TABNUM
+                FROM PEOPLE p{filter}
+                ORDER BY p.ID_PEP";
+
+            var queryCount = $"SELECT COUNT(*) FROM PEOPLE p{filter}";
+
+            var countResult = DatabaseService.GetParameterized<COUNTDataBase>(queryCount, parameters);
+            if (countResult.State != State.Successes || countResult.Value is not COUNTDataBase count)
+            {
+                return new Tuple<DatabaseResult, int>(countResult, 0);
+            }
+
+            var result = DatabaseService.GetListParameterized<PersonGet>(queryList, parameters);
+            return new Tuple<DatabaseResult, int>(result, count.count);
+        }
+
+        /// <summary>
         /// Возвращает набор категорий доступа сотрудника (таблица SS_ACCESSUSER).
         /// </summary>
         /// <param name="idPep">Внутренний идентификатор сотрудника.</param>

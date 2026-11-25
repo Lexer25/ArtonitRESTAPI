@@ -113,6 +113,26 @@
             Отчество.
             </summary>
         </member>
+        <member name="T:OpenAPIArtonit.Model.PersonV2Count">
+            <summary>
+            Статистика по таблице PEOPLE: всего сотрудников, активных и неактивных.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Count.Total">
+            <summary>
+            Количество всех записей в таблице PEOPLE.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Count.Active">
+            <summary>
+            Количество записей с ACTIVE = 1.
+            </summary>
+        </member>
+        <member name="P:OpenAPIArtonit.Model.PersonV2Count.Inactive">
+            <summary>
+            Количество записей с ACTIVE = 0.
+            </summary>
+        </member>
         <member name="T:OpenAPIArtonit.Model.PersonV2PostSee">
             <summary>
             Тело запроса на добавление сотрудника в REST API v2.
@@ -575,11 +595,34 @@
             REST API v2 для идентификаторов. Вместо id_pep используется tabnum.
             </summary>
         </member>
-        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.GetList(System.Int32,System.Int32,System.String)">
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.GetCount(System.String,System.String,System.String,System.String,System.String,System.String)">
             <summary>
-            Получить список идентификаторов (с разбиением на страницы) либо найти идентификатор по номеру.
+            Получить количество записей в таблице CARD по фильтрам: tabnum,
+            TIMESTART, TIMEEND, ACTIVE, ID_CARDTYPE и CREATEDAT.
+            В ответе — всего, активных и неактивных записей после фильтрации.
+            </summary>
+            <param name="tabnum">Табельный номер сотрудника.</param>
+            <param name="timestart">Дата или дата-время начала действия идентификатора.</param>
+            <param name="timeend">Дата или дата-время окончания действия идентификатора.</param>
+            <param name="active">Признак активности: 0 или 1 (также true/false, active/inactive, all).</param>
+            <param name="idCardtype">Тип идентификатора (CARD.ID_CARDTYPE).</param>
+            <param name="createdAt">Дата или дата-время создания записи (CARD.CREATEDAT).</param>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.GetList(System.Int32,System.Int32,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Получить список идентификаторов (с разбиением на страницы) по фильтрам:
+            tabnum, TIMESTART, TIMEEND, ACTIVE, ID_CARDTYPE и CREATEDAT.
             В ответе вместо id_pep возвращается tabnum.
             </summary>
+            <param name="pageIndex">Номер страницы, начиная с 0. По умолчанию 0.</param>
+            <param name="pageSize">Размер страницы от 1 до 1000. По умолчанию 10.</param>
+            <param name="identifire">Номер карты (прежний фильтр GetList).</param>
+            <param name="tabnum">Табельный номер сотрудника.</param>
+            <param name="timestart">Дата или дата-время начала действия идентификатора.</param>
+            <param name="timeend">Дата или дата-время окончания действия идентификатора.</param>
+            <param name="active">Признак активности: 0 или 1 (также true/false, active/inactive, all).</param>
+            <param name="idCardtype">Тип идентификатора (CARD.ID_CARDTYPE).</param>
+            <param name="createdAt">Дата или дата-время создания записи (CARD.CREATEDAT).</param>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.Add(ArtonitRESTAPI.Model.IdentifierV2PostSee)">
             <summary>
@@ -589,6 +632,23 @@
         <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.Delete(System.String)">
             <summary>
             Удалить идентификатор по номеру карты.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.TryParseFilter(System.String,System.String,System.String,System.String,System.String,System.String,System.String,ArtonitRESTAPI.Model.IdentifierV2Filter@,Microsoft.AspNetCore.Mvc.IActionResult@)">
+            <summary>
+            Разбирает и проверяет все необязательные фильтры IdentifierV2.
+            При ошибке возвращает готовый ответ 400 VALIDATION_ERROR.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.TryParseDateFilter(System.String,System.String,ArtonitRESTAPI.Model.IdentifierV2DateFilter@,Microsoft.AspNetCore.Mvc.IActionResult@)">
+            <summary>
+            Разбирает фильтр по колонке-дате. Значение без времени охватывает
+            весь день, значение с временем сравнивается точно.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.IdentifierV2Controller.TryParseActiveFilter(System.String,System.Nullable{System.Boolean}@,System.String@)">
+            <summary>
+            Разбирает фильтр активности. Пустое значение и all означают «все записи».
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.APIControllers.JsonBodyAttribute">
@@ -699,10 +759,21 @@
             </summary>
             <param name="tabnum">Табельный номер сотрудника</param>
         </member>
-        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.GetList(System.Int32,System.Int32)">
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.GetCount">
+            <summary>
+            Получить статистику по сотрудникам: количество всех записей в таблице
+            PEOPLE, количество активных (ACTIVE = 1) и неактивных (ACTIVE = 0).
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.GetList(System.Int32,System.Int32,System.String)">
             <summary>
             Получить список сотрудников. Список разбит на страницы.
+            Параметр active: не указан — все записи, true/1 — ACTIVE = 1,
+            false/0 — ACTIVE = 0.
             </summary>
+            <param name="pageIndex">Номер страницы, начиная с 0. По умолчанию 0.</param>
+            <param name="pageSize">Размер страницы от 1 до 1000. По умолчанию 10.</param>
+            <param name="active">Фильтр по признаку активности: all, active, inactive, 1, 0, true или false.</param>
         </member>
         <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.Add(OpenAPIArtonit.Model.PersonV2PostSee)">
             <summary>
@@ -761,6 +832,13 @@
             Ошибка поиска сотрудника по tabnum в едином формате REST API v2.
             Используется методами версии 1.6.0 (ФИО и набор категорий), чтобы
             клиент получал машиночитаемый код ошибки, а не строку.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.APIControllers.PersonV2Controller.TryParseActiveFilter(System.String,System.Nullable{System.Boolean}@,System.String@)">
+            <summary>
+            Разбирает фильтр активности для списка сотрудников. Пустое значение
+            означает «все записи», поэтому отсутствие параметра не меняет
+            поведение прежнего метода.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.APIControllers.V2ControllerBase">
@@ -936,6 +1014,31 @@
         <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.GetAll(System.Int32,System.Int32,System.String)">
             <summary>
             Возвращает страницу идентификаторов с tabnum вместо id_pep.
+            Перегрузка сохраняет прежний контракт GetList с фильтром identifire.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.GetAll(System.Int32,System.Int32,ArtonitRESTAPI.Model.IdentifierV2Filter)">
+            <summary>
+            Возвращает страницу идентификаторов по необязательным фильтрам:
+            номер карты, tabnum, тип, активность, TIMESTART, TIMEEND и CREATEDAT.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.GetCount(ArtonitRESTAPI.Model.IdentifierV2Filter)">
+            <summary>
+            Возвращает статистику по таблице CARD после применения фильтров:
+            всего, активных (ACTIVE = 1) и неактивных (ACTIVE = 0) записей.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.BuildWhere(ArtonitRESTAPI.Model.IdentifierV2Filter,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Строит общее условие WHERE для списка и статистики, добавляя
+            параметры в <paramref name="parameters"/>.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.AddDateCondition(System.Collections.Generic.ICollection{System.String},System.Collections.Generic.IDictionary{System.String,System.Object},ArtonitRESTAPI.Model.IdentifierV2DateFilter,System.String,System.String)">
+            <summary>
+            Добавляет условие по колонке-дате. Для значения без времени
+            используется интервал [дата 00:00; следующая дата 00:00).
             </summary>
         </member>
         <member name="M:ArtonitRESTAPI.DBControllers.IdentifierV2DBController.Add(ArtonitRESTAPI.Model.IdentifierV2PostSee,System.Int32)">
@@ -1322,6 +1425,21 @@
             <param name="idPep">Внутренний идентификатор сотрудника.</param>
             <param name="body">Новые значения ФИО.</param>
         </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.GetCount">
+            <summary>
+            Возвращает статистику по таблице PEOPLE: всего, активных (ACTIVE = 1)
+            и неактивных (ACTIVE = 0) сотрудников.
+            </summary>
+        </member>
+        <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.GetList(System.Int32,System.Int32,System.Nullable{System.Boolean})">
+            <summary>
+            Возвращает страницу сотрудников. Фильтр <paramref name="active"/>:
+            null — все записи, true — ACTIVE = 1, false — ACTIVE = 0.
+            </summary>
+            <param name="pageIndex">Номер страницы, начиная с 0.</param>
+            <param name="pageSize">Размер страницы.</param>
+            <param name="active">Фильтр по признаку активности или null для всех записей.</param>
+        </member>
         <member name="M:ArtonitRESTAPI.DBControllers.PersonV2DBController.GetAccessNames(System.Int32)">
             <summary>
             Возвращает набор категорий доступа сотрудника (таблица SS_ACCESSUSER).
@@ -1542,6 +1660,105 @@
         <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.TabNum">
             <summary>
             Табельный номер сотрудника, которому принадлежит идентификатор.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.Timestart">
+            <summary>
+            Дата и время начала действия идентификатора (CARD.TIMESTART).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.Timeend">
+            <summary>
+            Дата и время окончания действия идентификатора (CARD.TIMEEND).
+            null — срок действия не ограничен.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.Active">
+            <summary>
+            Признак активности идентификатора: 1 — активен, 0 — неактивен.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2List.Createdat">
+            <summary>
+            Дата и время создания записи (CARD.CREATEDAT).
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.IdentifierV2Count">
+            <summary>
+            Статистика по таблице CARD после применения фильтров: всего записей,
+            активных (ACTIVE = 1) и неактивных (ACTIVE = 0).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Count.Total">
+            <summary>
+            Количество записей в таблице CARD после применения фильтров.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Count.Active">
+            <summary>
+            Количество записей с ACTIVE = 1 после применения фильтров.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Count.Inactive">
+            <summary>
+            Количество записей с ACTIVE = 0 после применения фильтров.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.IdentifierV2DateFilter">
+            <summary>
+            Значение фильтра по колонке-дате. Если передана только дата без времени,
+            фильтр охватывает весь день; иначе сравнивается точное значение.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2DateFilter.Value">
+            <summary>
+            Разобранное значение даты или даты-времени.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2DateFilter.DateOnly">
+            <summary>
+            true — передана только дата, сравнивать нужно весь день.
+            </summary>
+        </member>
+        <member name="T:ArtonitRESTAPI.Model.IdentifierV2Filter">
+            <summary>
+            Разобранные фильтры методов IdentifierV2. Все поля необязательны:
+            null означает, что фильтр не задан.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Filter.IdCard">
+            <summary>
+            Номер карты (параметр identifire для совместимости со старым GetList).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Filter.TabNum">
+            <summary>
+            Табельный номер сотрудника (CARD.ID_PEP через PEOPLE.TABNUM).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Filter.IdCardtype">
+            <summary>
+            Тип идентификатора (CARD.ID_CARDTYPE).
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Filter.Active">
+            <summary>
+            Признак активности (CARD.ACTIVE): true — 1, false — 0.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Filter.TimeStart">
+            <summary>
+            Фильтр по CARD.TIMESTART.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Filter.TimeEnd">
+            <summary>
+            Фильтр по CARD.TIMEEND.
+            </summary>
+        </member>
+        <member name="P:ArtonitRESTAPI.Model.IdentifierV2Filter.CreatedAt">
+            <summary>
+            Фильтр по CARD.CREATEDAT.
             </summary>
         </member>
         <member name="T:ArtonitRESTAPI.Model.IdentifierV2PostSee">

@@ -48,19 +48,44 @@ namespace ArtonitRESTAPI.APIControllers
         }
 
         /// <summary>
-        /// Получить список сотрудников. Список разбит на страницы.
+        /// Получить статистику по сотрудникам: количество всех записей в таблице
+        /// PEOPLE, количество активных (ACTIVE = 1) и неактивных (ACTIVE = 0).
         /// </summary>
+        [HttpGet(nameof(GetCount))]
+        [ProducesResponseType(typeof(PersonV2Count), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+        public IActionResult GetCount()
+        {
+            return DataBaseStatusToWebStatusCode(PersonV2DBController.GetCount());
+        }
+
+        /// <summary>
+        /// Получить список сотрудников. Список разбит на страницы.
+        /// Параметр active: не указан — все записи, true/1 — ACTIVE = 1,
+        /// false/0 — ACTIVE = 0.
+        /// </summary>
+        /// <param name="pageIndex">Номер страницы, начиная с 0. По умолчанию 0.</param>
+        /// <param name="pageSize">Размер страницы от 1 до 1000. По умолчанию 10.</param>
+        /// <param name="active">Фильтр по признаку активности: all, active, inactive, 1, 0, true или false.</param>
         [HttpGet(nameof(GetList))]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public IActionResult GetList(int pageIndex = 0, int pageSize = 10)
+        public IActionResult GetList(
+            int pageIndex = 0,
+            int pageSize = 10,
+            [FromQuery(Name = "active")] string? active = null)
         {
             if (pageIndex < 0) pageIndex = 0;
             if (pageSize <= 0) pageSize = 10;
             if (pageSize > 1000) pageSize = 1000;
 
-            var request = PersonDBController.GetAll(pageIndex, pageSize);
+            if (!TryParseActiveFilter(active, out var activeFilter, out var activeError))
+            {
+                return ApiErrorResults.Validation("active", "invalid_value", activeError);
+            }
+
+            var request = PersonV2DBController.GetList(pageIndex, pageSize, activeFilter);
             var result = request.Item1;
 
             if (result.State == State.Successes && result.Value is List<PersonGet> persons)
@@ -388,6 +413,47 @@ namespace ArtonitRESTAPI.APIControllers
                     lookup.ErrorMessage),
                 _ => ApiErrorResults.Internal()
             };
+        }
+
+        /// <summary>
+        /// Разбирает фильтр активности для списка сотрудников. Пустое значение
+        /// означает «все записи», поэтому отсутствие параметра не меняет
+        /// поведение прежнего метода.
+        /// </summary>
+        private static bool TryParseActiveFilter(string? value, out bool? active, out string error)
+        {
+            active = null;
+            error = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return true;
+            }
+
+            switch (value.Trim().ToLowerInvariant())
+            {
+                case "all":
+                case "any":
+                    return true;
+
+                case "1":
+                case "true":
+                case "yes":
+                case "active":
+                    active = true;
+                    return true;
+
+                case "0":
+                case "false":
+                case "no":
+                case "inactive":
+                    active = false;
+                    return true;
+
+                default:
+                    error = "Параметр active должен быть одним из значений: all, active, inactive, 1, 0, true, false";
+                    return false;
+            }
         }
 
         private static PersonV2Get ToV2(PersonGet person)

@@ -65,6 +65,28 @@ REST API v2:
 категорий меняется обновлением только отличий от текущего. Подробное описание,
 ограничения и примеры — в docs/PEOPLE_API_v2.md.
 
+Статистика по сотрудникам (версия 1.7.0):
+- GET /api/v2/Person/GetCount возвращает количество всех записей в таблице PEOPLE,
+  количество активных (ACTIVE = 1) и неактивных (ACTIVE = 0) сотрудников:
+  {"total":79,"active":79,"inactive":0}.
+- GET /api/v2/Person/GetList получил необязательный параметр active: all или пусто —
+  все записи, 1/true/active — только ACTIVE = 1, 0/false/inactive — только ACTIVE = 0.
+  Структура ответа и пагинация не изменились, pageCount считается после фильтра.
+Методы только читают данные. Подробное описание — в docs/PEOPLE_API_v2.md,
+дымовой тест — docs/smoke-tests/people-stats.ps1.
+
+Статистика по идентификаторам (версия 1.8.0):
+- GET /api/v2/Identifier/GetCount возвращает количество записей таблицы CARD
+  после фильтров: всего, активных (ACTIVE = 1) и неактивных (ACTIVE = 0):
+  {"total":12,"active":10,"inactive":2}.
+- GET /api/v2/Identifier/GetList получил фильтры tabnum, timestart, timeend,
+  active, id_cardtype и createdat (плюс прежний identifire по номеру карты).
+  В элементах списка добавлены timestart, timeend, active и createdat;
+  пагинация и pageCount считаются после фильтров.
+Для дат поддерживается дата (весь день) и дата-время (точное совпадение).
+Методы только читают данные. Подробное описание — в docs/IDENTIFIERS_API_v2.md,
+дымовой тест — docs/smoke-tests/identifiers-stats.ps1.
+
 Swagger разделён на два документа:
 - v1: http://localhost:5056/swagger/v1/swagger.json
 - v2: http://localhost:5056/swagger/v2/swagger.json
